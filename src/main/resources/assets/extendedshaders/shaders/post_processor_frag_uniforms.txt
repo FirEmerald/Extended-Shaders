@@ -1,0 +1,6 @@
+uniform sampler2D tex0; //the scene
+uniform sampler2D tex1; //the fragment's eye pos
+varying vec2 texCoords; //the coordinates
+uniform float dx; //the X size of a fragment relative to the scene size
+uniform float dy; //the Y size of a fragment relative to the scene size
+uniform int eye; //-1 for no anaglyph, 0 for red(use gb), 1 for cyan(use r)

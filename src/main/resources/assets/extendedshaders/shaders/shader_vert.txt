@@ -1,0 +1,84 @@
+
+float processTexCoord(float coord, int texGenMode, vec4 texGenParamsEye, vec4 texGenParamsObject)
+{
+    if (texGenMode == 9216) return dot(texGenParamsEye, eyePos);
+    else if (texGenMode == 9217) return dot(texGenParamsObject, gl_Vertex);
+    else return coord;
+}
+
+void main()
+{
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    eyePos = gl_ModelViewMatrix * gl_Vertex;
+    gl_FogFragCoord = abs(eyePos.z/eyePos.w);
+	if (useTex[0])
+	{
+		vec4 texCoord = gl_MultiTexCoord0;
+		if (texGen_s) texCoord.s = processTexCoord(texCoord.s, texGenMode_s, gl_EyePlaneS[0], gl_ObjectPlaneS[0]);
+		if (texGen_t) texCoord.t = processTexCoord(texCoord.t, texGenMode_t, gl_EyePlaneT[0], gl_ObjectPlaneT[0]);
+		if (texGen_p) texCoord.p = processTexCoord(texCoord.p, texGenMode_p, gl_EyePlaneR[0], gl_ObjectPlaneR[0]);
+		if (texGen_q) texCoord.q = processTexCoord(texCoord.q, texGenMode_q, gl_EyePlaneQ[0], gl_ObjectPlaneQ[0]);
+		gl_TexCoord[0] = gl_TextureMatrix[0] * texCoord;
+	}
+	if (useTex[1])
+	{
+		vec4 texCoord = gl_MultiTexCoord1;
+		gl_TexCoord[1] = gl_TextureMatrix[1] * texCoord;
+	}
+	if (useTex[2])
+    {
+        vec4 texCoord = gl_MultiTexCoord2;
+        gl_TexCoord[2] = gl_TextureMatrix[2] * texCoord;
+    }
+    if (useTex[3])
+    {
+        vec4 texCoord = gl_MultiTexCoord3;
+        gl_TexCoord[3] = gl_TextureMatrix[3] * texCoord;
+    }
+    if (useTex[4])
+    {
+        vec4 texCoord = gl_MultiTexCoord4;
+        gl_TexCoord[4] = gl_TextureMatrix[4] * texCoord;
+    }
+    if (useTex[5])
+    {
+        vec4 texCoord = gl_MultiTexCoord5;
+        gl_TexCoord[5] = gl_TextureMatrix[5] * texCoord;
+    }
+    if (useTex[6])
+    {
+        vec4 texCoord = gl_MultiTexCoord6;
+        gl_TexCoord[6] = gl_TextureMatrix[6] * texCoord;
+    }
+    if (useTex[7])
+    {
+        vec4 texCoord = gl_MultiTexCoord7;
+        gl_TexCoord[7] = gl_TextureMatrix[7] * texCoord;
+    }
+    fragNorm = gl_NormalMatrix * gl_Normal;
+    fragCol = gl_Color;
+    if (useNormals)
+    {
+        vec3 color = vec3(0.0);
+        vec3 Idiff = color;
+        vec3 pos = gl_LightSource[0].position.xyz-eyePos.xyz;
+        vec3 L = normalize(pos);
+        float d = dot(fragNorm, L);
+        if (d > 0.0)
+        {
+            Idiff = gl_LightSource[0].diffuse.rgb * max(d, 0.0);
+            Idiff = clamp(Idiff, 0.0, 1.0);
+            color += Idiff;
+        }
+        pos = gl_LightSource[1].position.xyz-eyePos.xyz;
+        L = normalize(pos);
+        d = dot(fragNorm, L);
+        if (d > 0.0)
+        {
+            Idiff = gl_LightSource[1].diffuse.rgb * max(d, 0.0);
+            Idiff = clamp(Idiff, 0.0, 1.0);
+            color += Idiff;
+        }
+        color = vec3(0.4) + (color * 0.6);
+        fragCol.rgb *= clamp(color, 0.0, 1.0);
+    }

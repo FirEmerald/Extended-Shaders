@@ -1,0 +1,11 @@
+uniform sampler2D cyan;
+uniform sampler2D red;
+
+varying vec2 texCoords;
+
+void main()
+{
+    vec2 gb = texture2D(cyan, texCoords).gb;
+    float r = texture2D(red, texCoords).r;
+    gl_FragData[0] = vec4(r, gb, 1.0);
+}

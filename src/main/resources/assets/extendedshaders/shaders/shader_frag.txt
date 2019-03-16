@@ -1,0 +1,141 @@
+#define OGL_ADD 260
+#define OGL_SRC_COLOR 768
+#define OGL_ONE_MINUS_SRC_COLOR 769
+#define OGL_SRC_ALPHA 770
+#define OGL_ONE_MINUS_SRC_ALPHA 771
+#define OGL_TEXTURE 5890
+#define OGL_BLEND 3042
+#define OGL_REPLACE 7681
+#define OGL_MODULATE 8448
+#define OGL_DECAL 8449
+#define OGL_TEXTURE0 33984
+#define OGL_TEXTURE1 33985
+#define OGL_TEXTURE2 33986
+#define OGL_TEXTURE3 33987
+#define OGL_TEXTURE4 33988
+#define OGL_TEXTURE5 33989
+#define OGL_TEXTURE6 33990
+#define OGL_TEXTURE7 33991
+#define OGL_SUBTRACT 34023
+#define OGL_COMBINE 34160
+#define OGL_ADD_SIGNED 34164
+#define OGL_INTERPOLATE 34165
+#define OGL_CONSTANT 34166
+#define OGL_PRIMARY_COLOR 34167
+#define OGL_PREVIOUS 34168
+#define OGL_DOT3_RGB 34478
+#define OGL_DOT3_RGBA 34479
+
+vec4 doArg(vec4 frag, vec4 tex, vec4 texs[8], vec4 prev, int srcRGB, int operandRGB, int srcAlpha, int operandAlpha, int ind)
+{
+    vec4 res = vec4(0.0);
+    vec4 col = vec4(0.0);
+    if (srcRGB == OGL_TEXTURE) col = tex;
+    else if (srcRGB >= OGL_TEXTURE0 && srcRGB <= OGL_TEXTURE7) col = texs[srcRGB - OGL_TEXTURE0];
+    else if (srcRGB == OGL_CONSTANT) col = OGL_TEXTURE_ENV_COLOR[ind];
+    else if (srcRGB == OGL_PRIMARY_COLOR) col = frag;
+    else if (srcRGB == OGL_PREVIOUS) col = prev;
+    if (operandRGB == OGL_SRC_COLOR) res.rgb = col.rgb;
+    else if (operandRGB == OGL_ONE_MINUS_SRC_COLOR) res.rgb = 1.0 - col.rgb;
+    else if (operandRGB == OGL_SRC_ALPHA) res.rgb = vec3(col.a);
+    else if (operandRGB == OGL_ONE_MINUS_SRC_ALPHA) res.rgb = vec3(1.0 - col.a);
+    float a = 0.0;
+    if (srcAlpha == OGL_TEXTURE) a = tex.a;
+    else if (srcAlpha >= OGL_TEXTURE0 && srcAlpha <= OGL_TEXTURE7) a = texs[srcAlpha - OGL_TEXTURE0].a;
+    else if (srcAlpha == OGL_CONSTANT) a = OGL_TEXTURE_ENV_COLOR[ind].a;
+    else if (srcAlpha == OGL_PRIMARY_COLOR) a = frag.a;
+    else if (srcAlpha == OGL_PREVIOUS) a = prev.a;
+    if (operandAlpha == OGL_SRC_ALPHA) res.a = a;
+    else if (operandAlpha == OGL_ONE_MINUS_SRC_ALPHA) res.a = 1.0 - a;
+    return res;
+}
+
+vec4 doTexEnv(vec4 frag, vec4 texs[8], vec4 prev, int ind)
+{
+    vec4 col = vec4(1.0);
+    vec4 tex = texs[ind];
+    int envMode = OGL_TEXTURE_ENV_MODE[ind];
+    if (envMode == OGL_MODULATE)
+    {
+        col.rgb = prev.rgb * tex.rgb;
+        col.a = prev.a * tex.a;
+    }
+    else if (envMode == OGL_ADD)
+    {
+        col.rgb = prev.rgb + tex.rgb;
+        col.a = prev.a * tex.a;
+    }
+    else if (envMode == OGL_DECAL)
+    {
+        col.rgb = prev.rgb * (1.0 - tex.a) + tex.rgb * tex.a;
+        col.a = prev.a;
+    }
+    else if (envMode == OGL_BLEND)
+    {
+        col.rgb = prev.rgb * (1.0 - tex.rgb) + OGL_TEXTURE_ENV_COLOR[ind].rgb * tex.rgb;
+        col.a = prev.a * tex.a;
+    }
+    else if (envMode == OGL_REPLACE)
+    {
+        col = tex;
+    }
+    else if (envMode == OGL_COMBINE)
+    {
+        vec4 arg0 = doArg(frag, tex, texs, prev, OGL_SRC0_RGB[ind], OGL_OPERAND0_RGB[ind], OGL_SRC0_ALPHA[ind], OGL_OPERAND0_ALPHA[ind], ind);
+        vec4 arg1 = doArg(frag, tex, texs, prev, OGL_SRC1_RGB[ind], OGL_OPERAND1_RGB[ind], OGL_SRC1_ALPHA[ind], OGL_OPERAND1_ALPHA[ind], ind);
+        vec4 arg2 = doArg(frag, tex, texs, prev, OGL_SRC2_RGB[ind], OGL_OPERAND2_RGB[ind], OGL_SRC2_ALPHA[ind], OGL_OPERAND2_ALPHA[ind], ind);
+        if (OGL_COMBINE_RGB[ind] == OGL_REPLACE) col.rgb = arg0.rgb;
+        else if (OGL_COMBINE_RGB[ind] == OGL_MODULATE) col.rgb = arg0.rgb * arg1.rgb;
+        else if (OGL_COMBINE_RGB[ind] == OGL_ADD) col.rgb = arg0.rgb + arg1.rgb;
+        else if (OGL_COMBINE_RGB[ind] == OGL_ADD_SIGNED) col.rgb = arg0.rgb + arg1.rgb - 0.5;
+        else if (OGL_COMBINE_RGB[ind] == OGL_INTERPOLATE) col.rgb = arg0.rgb * arg2.rgb + arg1.rgb * (1.0 - arg2.rgb);
+        else if (OGL_COMBINE_RGB[ind] == OGL_SUBTRACT) col.rgb = arg0.rgb - arg1.rgb;
+        else if (OGL_COMBINE_RGB[ind] == OGL_DOT3_RGB) col.rgb = 4.0 * dot(arg0.rgb - 0.5, arg1.rgb - 0.5);
+        else if (OGL_COMBINE_RGB[ind] == OGL_DOT3_RGBA)
+        {
+            col.a = 4.0 * dot(arg0.rgb - 0.5, arg1.rgb - 0.5);
+            col.rgb = col.a;
+        }
+        if (OGL_COMBINE_ALPHA[ind] == OGL_REPLACE) col.a = arg0.a;
+        else if (OGL_COMBINE_ALPHA[ind] == OGL_MODULATE) col.a = arg0.a * arg1.a;
+        else if (OGL_COMBINE_ALPHA[ind] == OGL_ADD) col.a = arg0.a + arg1.a;
+        else if (OGL_COMBINE_ALPHA[ind] == OGL_ADD_SIGNED) col.a = arg0.a + arg1.a - 0.5;
+        else if (OGL_COMBINE_ALPHA[ind] == OGL_INTERPOLATE) col.a = arg0.a * arg2.a + arg1.a * (1.0 - arg2.a);
+        else if (OGL_COMBINE_ALPHA[ind] == OGL_SUBTRACT) col.a = arg0.a - arg1.a;
+    }
+    return clamp(col * vec4(vec3(OGL_RGB_SCALE[ind]), OGL_ALPHA_SCALE[ind]), 0.0, 1.0);
+}
+
+void main()
+{
+    gl_FragData[0] = fragCol;
+    vec4 texs[8];
+    texs[0] = texture2D(tex[0], gl_TexCoord[0].st / gl_TexCoord[0].q);
+    texs[1] = texture2D(tex[1], gl_TexCoord[1].st / gl_TexCoord[1].q);
+    texs[2] = texture2D(tex[2], gl_TexCoord[2].st / gl_TexCoord[2].q);
+    texs[3] = texture2D(tex[3], gl_TexCoord[3].st / gl_TexCoord[3].q);
+    texs[4] = texture2D(tex[4], gl_TexCoord[4].st / gl_TexCoord[4].q);
+    texs[5] = texture2D(tex[5], gl_TexCoord[5].st / gl_TexCoord[5].q);
+    texs[6] = texture2D(tex[6], gl_TexCoord[6].st / gl_TexCoord[6].q);
+    texs[7] = texture2D(tex[7], gl_TexCoord[7].st / gl_TexCoord[7].q);
+    if (useTex[0]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 0);
+    if (useTex[1]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 1);
+    if (useTex[2]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 2);
+    if (useTex[3]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 3);
+    if (useTex[4]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 4);
+    if (useTex[5]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 5);
+    if (useTex[6]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 6);
+    if (useTex[7]) gl_FragData[0] = doTexEnv(fragCol, texs, gl_FragData[0], 7);
+    if (useFog)
+    {
+        float fogFactor = 0.0;
+        if (fogMode == 9729) fogFactor = (fogEnd - gl_FogFragCoord) * fogScale;
+        else
+        {
+            float f = fogDensity * gl_FogFragCoord;
+            if (fogMode == 2048) fogFactor = exp(-f);
+            else if (fogMode == 2049) fogFactor = exp(-(f * f));
+        }
+        gl_FragData[0].rgb = mix(fogColor.rgb, gl_FragData[0].rgb, clamp(fogFactor, 0.0, 1.0));
+    }
+    gl_FragData[1] = vec4(eyePos.xyz, 1.0);
