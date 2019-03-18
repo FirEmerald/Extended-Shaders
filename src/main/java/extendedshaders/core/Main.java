@@ -729,4 +729,11 @@ public class Main
 		}
 		return shader;
     }
+    
+    public static void bindSecondTex(int tex)
+    {
+    	GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
+    	GlStateManager.bindTexture(tex);
+    	GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+    }
 }
