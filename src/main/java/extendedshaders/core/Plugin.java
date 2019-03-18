@@ -13,13 +13,13 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.*;
 import net.minecraftforge.fml.relauncher.Side;
 
 @SortingIndex(value = Integer.MAX_VALUE)
-@TransformerExclusions(value = {"extendedshaders.core.Plugin", "extendedshaders.core.Transformer", "extendedshaders.core.Shaders", "extendedshaders.core.Bypass"})
+@TransformerExclusions(value = {"extendedshaders.core.Plugin", "extendedshaders.core.Transformer", "extendedshaders.core.Shaders"})
 @Name(value = "Extended Shaders")
 @MCVersion("1.12.2")
 public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
 {
     public static final String MC_VERSION = "[1.12.2]";
-    public static final String ES_VERSION = "[7.1]";
+    public static final String ES_VERSION = "[7.1a]";
     private File location;
     
     public final Logger logger = LogManager.getLogger("Extended Shaders");
