@@ -13,9 +13,10 @@ public class ReloadListener implements IResourceManagerReloadListener
 {
 	private static ArrayList<WeakReference<Shader>> data = new ArrayList<WeakReference<Shader>>();
 	private static ArrayList<WeakReference<PostProcessor>> post = new ArrayList<WeakReference<PostProcessor>>();
+	public static final ReloadListener INSTANCE;
 	static
 	{
-		((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(new ReloadListener());
+		((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(INSTANCE = new ReloadListener());
 	}
 	
 	protected static void addData(Shader shaderData)
@@ -31,6 +32,12 @@ public class ReloadListener implements IResourceManagerReloadListener
 	@Override
 	public void onResourceManagerReload(IResourceManager manager)
 	{
+		reloadShaders(manager);
+		reloadPostProcessors(manager);
+	}
+
+	public void reloadShaders(IResourceManager manager)
+	{
 		ShaderRegistry.hasChanged = true;
 		int size = data.size();
 		for (int i = 0; i < size; i++)
@@ -44,7 +51,11 @@ public class ReloadListener implements IResourceManagerReloadListener
 			}
 			else reference.get().onReload(manager);
 		}
-		size = post.size();
+	}
+
+	public void reloadPostProcessors(IResourceManager manager)
+	{
+		int size = post.size();
 		for (int i = 0; i < size; i++)
 		{
 			WeakReference<PostProcessor> reference = post.get(i);

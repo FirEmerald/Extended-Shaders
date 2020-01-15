@@ -17,7 +17,6 @@ public class Bypass
 {
 	public static boolean isAlias = false;
 	public static boolean isEntity = false;
-	public static boolean ignoreEffects = false;
 	public static float[] fogColor = {0, 0, 0, 1};
 	public static IntBuffer useTex = BufferUtils.createIntBuffer(8);
 	public static IntBuffer GL_TEXTURE_ENV_MODE = BufferUtils.createIntBuffer(8);
@@ -101,7 +100,6 @@ public class Bypass
 	{
 		isAlias = false;
 		isEntity = false;
-		ignoreEffects = false;
 		for (int i = 0; i < 8; i++)
 		{
 			useTex.put(i, GlStateManager.textureState[i].texture2DState.currentState ? 1 : 0);
@@ -138,7 +136,6 @@ public class Bypass
 		GLSLHelper.uniform4f(Main.fogColor, fogColor[0] = 0, fogColor[1] = 0, fogColor[2] = 0, fogColor[3] = 1);
 		GLSLHelper.uniform1i(Main.isAlias, 0);
 		GLSLHelper.uniform1i(Main.isEntity, 0);
-		GLSLHelper.uniform1i(Main.ignoreEffects, 0);
 		GLSLHelper.uniform1(Main.useTex, useTex);
 		GLSLHelper.uniform1i(Main.texGen_s, GlStateManager.texGenState.s.textureGen.currentState ? 1 : 0);
 		GLSLHelper.uniform1i(Main.texGenMode_s, GlStateManager.texGenState.s.param);
@@ -182,7 +179,6 @@ public class Bypass
 		GLSLHelper.uniform4f(Main.fogColor, fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
 		GLSLHelper.uniform1i(Main.isAlias, isAlias ? 1 : 0);
 		GLSLHelper.uniform1i(Main.isEntity, isEntity ? 1 : 0);
-		GLSLHelper.uniform1i(Main.ignoreEffects, ignoreEffects ? 1 : 0);
 		GLSLHelper.uniform1(Main.useTex, useTex);
 		GLSLHelper.uniform1i(Main.texGen_s, GlStateManager.texGenState.s.textureGen.currentState ? 1 : 0);
 		GLSLHelper.uniform1i(Main.texGenMode_s, GlStateManager.texGenState.s.param);

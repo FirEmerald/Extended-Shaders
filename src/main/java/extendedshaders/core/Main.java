@@ -76,7 +76,7 @@ public class Main
     	else if (event instanceof FMLPostInitializationEvent)
     	{
         	MinecraftForge.EVENT_BUS.register(new EventHandler());
-        	if (!Plugin.isOptifineEnabled()) try
+        	if (!Plugin.getVariant().isOptifineEnabled) try
         	{
     			Plugin.logger().info("Optifine not detected, adding shaders option to \"Video Settings\"");
             	EventHandler.shaders = EnumHelper.addEnum(GameSettings.Options.class, "SHADERS", new Class[] {String.class, Boolean.TYPE, Boolean.TYPE}, new Object[] {"Shaders", false, true});
@@ -99,8 +99,10 @@ public class Main
         	{
         		FMLClientHandler.instance().haltGame("Failed to add shader option", e);
         	}
+        	ReloadListener.INSTANCE.reloadPostProcessors(Minecraft.getMinecraft().getResourceManager()); //fix post processors not setting uniforms
         	//ShaderRegistry.addShader(new ShaderSingle(null, null, new ResourceLocation("extendedshaders", "shaders/xray_define.txt"), new ResourceLocation("extendedshaders", "shaders/xray_code.txt"), 0));
         	//PostProcessorRegistry.addPostProcessor(new PostProcessor(null, new ResourceLocation("extendedshaders", "shaders/cell_shade.txt")));
+        	//PostProcessorRegistry.addPostProcessor(new PostProcessor(new ResourceLocation("extendedshaders", "shaders/zoom_blur_define.txt"), new ResourceLocation("extendedshaders", "shaders/zoom_blur_code.txt")));
     	}
     }
 
@@ -118,7 +120,6 @@ public class Main
     protected static int fogColor = -1;
     protected static int isAlias = -1;
     protected static int isEntity = -1;
-    protected static int ignoreEffects = -1;
     protected static int useTex = -1;
     protected static int texGen_s = -1;
     protected static int texGenMode_s = -1;
@@ -343,15 +344,21 @@ public class Main
     	}
     }
     
+    private static boolean rebindCheck = false;
+    
     public static void unbind()
     {
-    	GLSLHelper.runProgram(0);
-		ShaderRegistry.shadersActive = false;
+    	if (ShaderRegistry.shadersActive)
+    	{
+        	GLSLHelper.runProgram(0);
+    		ShaderRegistry.shadersActive = false;
+    		rebindCheck = true;
+    	}
     }
     
     public static void rebind()
     {
-    	if (Enabled.isEnabled())
+    	if (rebindCheck)
     	{
         	int shader = currentShaders[currentState];
         	if (shader > 0) //shader valid, run
@@ -366,6 +373,7 @@ public class Main
         		ShaderRegistry.shadersActive = true;
         		Bypass.reset();
         	}
+        	rebindCheck = false;
     	}
     }
     
@@ -735,5 +743,10 @@ public class Main
     	GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
     	GlStateManager.bindTexture(tex);
     	GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+    }
+    
+    public static void disableEntity()
+    {
+    	if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 0);
     }
 }

@@ -111,8 +111,14 @@ public class ShaderPassthrough extends Passthrough
 	}
 	
 	@Override
-	public void setIgnoreEffects(boolean ignoreEffects)
+	public void pauseShaders()
 	{
-		GLSLHelper.uniform1i(Main.ignoreEffects, (Bypass.ignoreEffects = ignoreEffects) ? 1 : 0);
+		Main.unbind();
+	}
+	
+	@Override
+	public void resumeShaders() 
+	{
+		Main.rebind();
 	}
 }

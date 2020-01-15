@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourceManager;
 
 /** Use this class to create a multi-state shader. **/
-public class ShaderMulti extends Shader //TODO
+public class ShaderMulti extends Shader
 {
 	/** the different shader states. **/
 	public final ShaderData[] states;

@@ -9,6 +9,8 @@ public class Passthrough
 	public void loadPostProcessor(PostProcessor postProcessor) {}
 	/** switch to the current shader states **/
 	public void updateShaderStates() {}
-	/** toggle ignoring of special effects I.E. for GUI elements in-world. Note that the effects of this MUST be applied by mod's shaders. **/
-	public void setIgnoreEffects(boolean ignoreEffects) {}
+	/** stop shaders for rendering to a different FB **/
+	public void pauseShaders() {}
+	/** resume shaders after rendering to a different FB **/
+	public void resumeShaders() {}
 }

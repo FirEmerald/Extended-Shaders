@@ -41,11 +41,4 @@ public class EventHandler
 	{
 		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 1);
 	}
-	/*
-	@SubscribeEvent
-	public void onRenderSky(ShaderEvent.RenderSky event)
-	{
-		event.setCanceled(true);
-	}
-	*/
 }
