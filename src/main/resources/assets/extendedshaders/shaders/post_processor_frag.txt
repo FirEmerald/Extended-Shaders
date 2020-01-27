@@ -2,4 +2,4 @@
 void main()
 {
     gl_FragData[0] = texture2D(tex0, texCoords);
-    //gl_FragData[1] = texture2D(tex1, texCoords);
+    gl_FragData[1] = texture2D(tex1, texCoords);

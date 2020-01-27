@@ -1,0 +1,8 @@
+uniform sampler2D tex;
+
+varying vec2 texCoords;
+
+void main()
+{
+    gl_FragData[0] = texture2D(tex, texCoords);
+}

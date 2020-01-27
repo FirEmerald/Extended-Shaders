@@ -19,7 +19,7 @@ import net.minecraftforge.fml.relauncher.Side;
 public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
 {
     public static final String MC_VERSION = "[1.12.2]";
-    public static final String ES_VERSION = "[7.2]";
+    public static final String ES_VERSION = "[7.4]";
     private File location;
     
     public final Logger logger = LogManager.getLogger("Extended Shaders");
@@ -57,12 +57,13 @@ public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
     	}
     }
 
-	public static final String VIVECRAFT_TEST_CLASS = "com.mtbs3d.minecrift.main.VivecraftMain";
+	public static final String VIVECRAFT_TEST_CLASS = "org.vivecraft.main.VivecraftMain";
 	public static final String OPTIFINE_TEST_CLASS = "optifine.OptiFineClassTransformer";
 	private static Variant variant = null;
 	
 	private static Variant getVariantOriginal()
 	{
+		if (FMLLaunchHandler.isDeobfuscatedEnvironment()) return Variant.VANILLA;
 		try
 		{
 			if (Class.forName(VIVECRAFT_TEST_CLASS) != null) return Variant.VIVECRAFT;

@@ -7,6 +7,8 @@ import org.objectweb.asm.tree.*;
 
 public class TransformerVivecraft extends TransformerOptifine
 {
+	public static final String matrixMode = Shaders.DEOB ? "matrixMode" : "func_179128_n";
+	
 	@Override
 	public byte[] transform(String name, String tName, byte[] basicClass)
 	{
@@ -55,6 +57,7 @@ public class TransformerVivecraft extends TransformerOptifine
 				InsnList toInject;
 				boolean isFirstShadowCheck = true;
 				boolean isFirstClear = true;
+				boolean crosshairFlag = false;
 				AbstractInsnNode prev = null;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
@@ -62,30 +65,73 @@ public class TransformerVivecraft extends TransformerOptifine
 					AbstractInsnNode node = m.instructions.get(i);
 					switch (node.getOpcode())
 					{
+					case ALOAD:
+					{
+						if (!crosshairFlag && (i + 1 < size) && ((VarInsnNode) node).var == 0)
+						{
+							node = m.instructions.get(i + 1);
+							if (node.getOpcode() == INVOKEVIRTUAL)
+							{
+								MethodInsnNode mNode = (MethodInsnNode) node;
+								//System.out.println(mNode.owner + "." + mNode.name + mNode.desc);
+								if (mNode.owner.equals("net/minecraft/client/renderer/EntityRenderer") && mNode.name.equals("renderCrosshairAtDepth")  && mNode.desc.equals("()V"))
+								{
+									crosshairFlag = true;
+									i++;
+									toInject = new InsnList();
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "unbind", "()V", false));
+									toInject.add(new LabelNode());
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "swapToSecondaryFB", "()V", false));
+									toInject.add(new LabelNode());
+									i += toInject.size();
+									size += toInject.size();
+									m.instructions.insert(node, toInject);
+								}
+							}
+						}
+						break;
+					}
 					case INVOKESTATIC:
 					{
 						MethodInsnNode mNode = (MethodInsnNode) node;
-						if (mNode.owner.equals("net/minecraft/client/renderer/GlStateManager") && mNode.name.equals(clear) && mNode.desc.equals("(I)V"))
+						if (mNode.owner.equals("net/minecraft/client/renderer/GlStateManager") && mNode.desc.equals("(I)V"))
 						{
-							if (isFirstClear)
+							if (mNode.name.equals(matrixMode))
 							{
-								isFirstClear = false;
-								toInject = new InsnList();
-								toInject.add(new LabelNode());
-								toInject.add(new VarInsnNode(FLOAD, 2));
-								toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "runShaders", "(F)V", false));
-								toInject.add(new LabelNode());
-								i += toInject.size();
-								size += toInject.size();
-								m.instructions.insert(node, toInject);
+								if (crosshairFlag)
+								{
+									toInject = new InsnList();
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "swapToMainFB", "()V", false));
+									toInject.add(new LabelNode());
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "rebind", "()V", false));
+									toInject.add(new LabelNode());
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "disableEntity", "()V", false));
+									toInject.add(new LabelNode());
+									i += toInject.size();
+									size += toInject.size();
+									m.instructions.insert(node, toInject);
+								}
+							}
+							else if (mNode.name.equals(clear))
+							{
+								if (isFirstClear)
+								{
+									isFirstClear = false;
+									toInject = new InsnList();
+									toInject.add(new LabelNode());
+									toInject.add(new VarInsnNode(FLOAD, 2));
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "runShaders", "(F)V", false));
+									toInject.add(new LabelNode());
+									i += toInject.size();
+									size += toInject.size();
+									m.instructions.insert(node, toInject);
+								}
 							}
 						}
 						break;
 					}
 					case IFNE:
 					{
-						//getstatic net/optifine/shaders/Shaders.isShadowPass:boolean
-						//ifne L48
 						if (isFirstShadowCheck && prev != null && prev.getOpcode() == GETSTATIC)
 						{
 							FieldInsnNode fNode = (FieldInsnNode) prev;
@@ -117,41 +163,6 @@ public class TransformerVivecraft extends TransformerOptifine
 					}
 					}
 					prev = node;
-				}
-			}
-			else if (m.name.equals("renderGuiLayer"))
-			{
-				if (m.desc.equals("(F)V"))
-				{
-					Plugin.logger().debug("patching renderGuiLayer(float)");
-					int size = m.instructions.size();
-					for (int i = 0; i < size; i++)
-					{
-						AbstractInsnNode node = m.instructions.get(i);
-						if (node.getOpcode() == RETURN)
-						{
-							InsnList toInject = new InsnList();
-							/*
-							toInject.add(new FieldInsnNode(GETSTATIC, "extendedshaders/api/Passthrough", "instance", "Lextendedshaders/api/Passthrough;"));
-							toInject.add(new InsnNode(ICONST_0));
-							toInject.add(new MethodInsnNode(INVOKEVIRTUAL, "extendedshaders/api/Passthrough", "setIgnoreEffects", "(Z)V", false));
-							*/
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "rebind", "()V", false));
-							toInject.add(new LabelNode());
-							i += toInject.size();
-							size += toInject.size();
-							m.instructions.insertBefore(node, toInject);
-						}
-					}
-					InsnList toInject = new InsnList();
-					/*
-					toInject.add(new FieldInsnNode(GETSTATIC, "extendedshaders/api/Passthrough", "instance", "Lextendedshaders/api/Passthrough;"));
-					toInject.add(new InsnNode(ICONST_1));
-					toInject.add(new MethodInsnNode(INVOKEVIRTUAL, "extendedshaders/api/Passthrough", "setIgnoreEffects", "(Z)V", false));
-					*/
-					toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "unbind", "()V", false));
-					toInject.add(new LabelNode());
-					m.instructions.insert(toInject);
 				}
 			}
 		}

@@ -1,13 +1,20 @@
 package extendedshaders.core;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -148,6 +155,8 @@ public class Main
 	protected static int GL_SRC2_ALPHA = -1;
 	protected static int GL_OPERAND2_ALPHA = -1;
     @SideOnly(Side.CLIENT)
+    protected static Framebuffer secondary;
+    @SideOnly(Side.CLIENT)
     protected static Framebuffer copy;
     @SideOnly(Side.CLIENT)
     protected static Framebuffer cyan;
@@ -233,6 +242,7 @@ public class Main
         		{
          	       	Minecraft mc = Minecraft.getMinecraft();
         			Framebuffer f = mc.getFramebuffer();
+         	       	secondary = createIfInvalid(secondary, f.framebufferWidth, f.framebufferHeight, true);
          	       	copy = createIfInvalid(copy, f.framebufferWidth, f.framebufferHeight, true);
          	       	cyan = createIfInvalid(cyan, f.framebufferWidth, f.framebufferHeight, true);
          	       	red = createIfInvalid(red, f.framebufferWidth, f.framebufferHeight, true);
@@ -243,7 +253,7 @@ public class Main
     		}
     	}
     }
-    
+
     public static void copyFramebuffers(Framebuffer src, Framebuffer des, int... modes)
     {
 		GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, src.framebufferObject);
@@ -257,6 +267,17 @@ public class Main
 			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 		}
 		if (src.useDepth && des.useDepth) GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
+		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+    }
+    
+    public static void copyDepthBuffers(int src, int des, int w, int h)
+    {
+		GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, src);
+		GLSLHelper.bindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, des);
+		GL11.glReadBuffer(GL30.GL_DEPTH_ATTACHMENT);
+		GL11.glDrawBuffer(GL30.GL_DEPTH_ATTACHMENT);
+		GLSLHelper.blitFramebuffer(0, 0, w, h, 0, 0, w, h, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
 		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
     }
@@ -290,8 +311,10 @@ public class Main
  	       	GlStateManager.enableBlend();
  	       	Framebuffer f = mc.getFramebuffer();
  	       	GLSLHelper.runProgram(0);
+    		int unit = GlStateManager.activeTextureUnit + OpenGlHelper.defaultTexUnit;
         	if (posts.length > 0 && GLSLHelper.framebuffersEnabled())
         	{
+        		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
         		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
  	       		for (PostProcessor post : posts)
  	       		{
@@ -299,6 +322,8 @@ public class Main
  	       			{
  	       				if (MinecraftForge.EVENT_BUS.post(new PostProcessorEvent.Bind(partialTicks, post))) continue;
  	       				GLSLHelper.runProgram(post.program);
+ 	       				GLSLHelper.uniform1i(post.tex0, 0);
+ 	       				GLSLHelper.uniform1i(post.tex1, 1);
  	       				GLSLHelper.uniform1f(post.dx, 1f / width);
  	       				GLSLHelper.uniform1f(post.dy, 1f / height);
  	       				GLSLHelper.uniform1i(post.eye, mc.gameSettings.anaglyph ? EntityRenderer.anaglyphField : -1);
@@ -312,7 +337,11 @@ public class Main
  	 	        	       	clearPos(copy);
  	 	       				copyFramebuffers(f, copy, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
  	 	       				GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
- 	 	       				copy.bindFramebufferTexture();
+ 	 	       				//copy.bindFramebufferTexture();
+ 	 	       				GlStateManager.bindTexture(copy.framebufferTexture);
+ 	 	       				GlStateManager.setActiveTexture(GL13.GL_TEXTURE1);
+ 	 	       				GlStateManager.bindTexture(FramebufferUtil.getFBPosTex(copy));
+ 	 	       				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
  	 	       				b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
  	 	       				b.pos(0, 0, 1000).tex(0, 0).endVertex();
  	 	       				b.pos(width, 0, 1000).tex(1, 0).endVertex();
@@ -323,9 +352,33 @@ public class Main
  	       				}
  	       			}
  	       		}
- 	       		GLSLHelper.runProgram(0);
         		GLSLHelper.checkGLErrors("Post Processing");
         	}
+			IntBuffer buf = BufferUtils.createIntBuffer(1);
+			buf.put(GL30.GL_COLOR_ATTACHMENT0);
+			buf.flip();
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+			GlStateManager.bindTexture(0);
+			GL20.glDrawBuffers(buf);
+			{
+				GLSLHelper.runProgram(copyShader);
+				GLSLHelper.uniform1i(copyTex, GlStateManager.activeTextureUnit);
+        		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+				GlStateManager.bindTexture(secondary.framebufferTexture);
+ 				b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+ 				b.pos(0, 0, 1000).tex(0, 0).endVertex();
+ 				b.pos(width, 0, 1000).tex(1, 0).endVertex();
+ 				b.pos(width, height, 1000).tex(1, 1).endVertex();
+ 				b.pos(0, height, 1000).tex(0, 1).endVertex();
+ 				t.draw();
+ 				secondary.framebufferClear();
+			}
+			GLSLHelper.runProgram(0);
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE1);
+			GlStateManager.bindTexture(0);
+    		GlStateManager.setActiveTexture(unit);
+			GlStateManager.bindTexture(0);
+			
         	if (mc.gameSettings.anaglyph)
         	{
         		copyFramebuffers(f, EntityRenderer.anaglyphField == 0 ? cyan : red, GL30.GL_COLOR_ATTACHMENT0);
@@ -333,10 +386,6 @@ public class Main
         		clearPos(f);
         		GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
         	}
-			IntBuffer buf = BufferUtils.createIntBuffer(1);
-			buf.put(GL30.GL_COLOR_ATTACHMENT0);
-			buf.flip();
-			GL20.glDrawBuffers(buf);
 			GlStateManager.popMatrix();
  	       	GlStateManager.matrixMode(GL11.GL_PROJECTION);
 			GlStateManager.popMatrix();
@@ -377,6 +426,36 @@ public class Main
     	}
     }
     
+    private static int prevFB = -1;
+    
+    public static void swapToSecondaryFB()
+    {
+    	if (ShaderRegistry.shadersActive || rebindCheck)
+    	{
+    		if (prevFB < 0)
+    		{
+    			prevFB = GlStateManager.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+    			//copyDepthBuffers(prevFB, secondary.framebufferObject, secondary.framebufferWidth, secondary.framebufferHeight); //respect depth buffer
+    			OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, secondary.framebufferObject);
+    		}
+    	}
+    }
+    
+    public static void swapToMainFB()
+    {
+    	if (ShaderRegistry.shadersActive || rebindCheck)
+    	{
+    		if (prevFB >= 0)
+    		{
+    			//copyDepthBuffers(secondary.framebufferObject, prevFB, secondary.framebufferWidth, secondary.framebufferHeight); //respect depth buffer
+    			OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, prevFB);
+    			prevFB = -1;
+    		}
+    	}
+    }
+
+    protected static int copyShader = -1;
+    protected static int copyTex;
     protected static int anaglyphShader = -1;
     protected static int anaglyphCyan, anaglyphRed;
     
@@ -441,11 +520,18 @@ public class Main
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex);
 		GL11.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, pixelBuffer);
 		pixelBuffer.get(pixelValues);
-		TextureUtil.func_147953_a(pixelValues, w, h);
-		BufferedImage bufferedimage = new BufferedImage(w, h, 1);
-		for (int i1 = 0; i1 < h; ++i1) for (int j1 = 0; j1 < w; ++j1) bufferedimage.setRGB(j1, i1, pixelValues[i1 * w + j1]);
+		BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		img.setRGB(0, 0, w, h, pixelValues, 0, w);
 		File file3 = new File(Minecraft.getMinecraft().mcDataDir, "test" + tex + ".png");
-		ImageIO.write(bufferedimage, "png", file3);
+		if (!ImageIO.write(img, "png", file3)) //TODO ask if want to exclude alpha?
+		{
+			img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+			img.setRGB(0, 0, w, h, pixelValues, 0, w);
+			if (!ImageIO.write(img, "png", file3))
+			{
+				throw new IOException("Unable to save image with type INT_ARGB or type INT_RGB and format " + "png");
+			}
+		}
 	}
     */
     public static boolean skipSky(float partialTicks)
@@ -737,14 +823,7 @@ public class Main
 		}
 		return shader;
     }
-    
-    public static void bindSecondTex(int tex)
-    {
-    	GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-    	GlStateManager.bindTexture(tex);
-    	GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-    }
-    
+
     public static void disableEntity()
     {
     	if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 0);

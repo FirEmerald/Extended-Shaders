@@ -13,4 +13,8 @@ public class Passthrough
 	public void pauseShaders() {}
 	/** resume shaders after rendering to a different FB **/
 	public void resumeShaders() {}
+	/** swaps to a secondary framebuffer that doesn't get used in post-processing **/
+	public void swapToSecondaryFB() {}
+	/** swaps back to the main framebuffer **/
+	public void swapToMainFB() {}
 }

@@ -19,11 +19,15 @@ public class CoreReloadListener implements IResourceManagerReloadListener
 		Shaders.shaderUniform = 			readFile("shader_uniform");
 		Shaders.shaderFrag = 				readFile("shader_frag");
 		Shaders.shaderVert = 				readFile("shader_vert");
+		Shaders.copyFrag = 					readFile("copy_frag");
 		Shaders.anaglyphFrag = 				readFile("anaglyph_frag");
-		Shaders.anaglyphVert = 				readFile("anaglyph_vert");
 		ShaderRegistry.hasChanged = true;
+		if (Main.copyShader > 0) GLSLHelper.deleteProgram(Main.copyShader);
+		Main.copyShader = Main.createShader(Shaders.postProcessorVert, Shaders.copyFrag);
+		if (Main.copyShader <= 0) FMLClientHandler.instance().haltGame("failed to create copy shader!", new Exception());
+		Main.copyTex = GLSLHelper.getUniformLocation(Main.copyShader, "tex");
 		if (Main.anaglyphShader > 0) GLSLHelper.deleteProgram(Main.anaglyphShader);
-		Main.anaglyphShader = Main.createShader(Shaders.anaglyphVert, Shaders.anaglyphFrag);
+		Main.anaglyphShader = Main.createShader(Shaders.postProcessorVert, Shaders.anaglyphFrag);
 		if (Main.anaglyphShader <= 0) FMLClientHandler.instance().haltGame("failed to create anaglyph shader!", new Exception());
 		Main.anaglyphCyan = GLSLHelper.getUniformLocation(Main.anaglyphShader, "cyan");
 		Main.anaglyphRed = GLSLHelper.getUniformLocation(Main.anaglyphShader, "red");

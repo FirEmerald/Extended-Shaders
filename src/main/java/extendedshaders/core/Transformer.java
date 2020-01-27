@@ -1,5 +1,8 @@
 package extendedshaders.core;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.lwjgl.opengl.GL11;
@@ -48,8 +51,14 @@ public class Transformer implements IClassTransformer, Opcodes
 		else if (tName.equals("net.minecraft.client.settings.GameSettings")) basicClass = transformGameSettings(basicClass);
 		else if (tName.equals("net.minecraft.client.shader.Framebuffer")) basicClass = transformFramebuffer(basicClass);
 		else if (tName.equals("net.minecraft.client.renderer.ItemRenderer")) basicClass = transformItemRenderer(basicClass);
+		else if (tName.equals("extendedshaders.core.FramebufferUtil")) basicClass = transformFramebufferUtil(basicClass);
 		if (!tName.equals("extendedshaders.core.Bypass")) basicClass = bypass(name, basicClass);
 		//if (tName.equals("net.minecraft.client.shader.Framebuffer")) saveClass(tName, basicClass);
+		//if (tName.equals("net.minecraft.client.renderer.EntityRenderer")) saveClass(tName, basicClass);
+		//else if (tName.equals("net.minecraft.client.renderer.RenderGlobal")) saveClass(tName, basicClass);
+		//else if (tName.equals("net.minecraft.client.settings.GameSettings")) saveClass(tName, basicClass);
+		//else if (tName.equals("net.minecraft.client.shader.Framebuffer")) saveClass(tName, basicClass);
+		//else if (tName.equals("net.minecraft.client.renderer.ItemRenderer")) saveClass(tName, basicClass);
 		//saveClass(tName, basicClass);
 		return basicClass;
 	}
@@ -346,7 +355,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformFramebuffer(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching net.minecraft.client.shader.Framebuffer");
@@ -574,68 +583,6 @@ public class Transformer implements IClassTransformer, Opcodes
 					}
 				}
 			}
-			else if (m.name.equals(bindFramebufferTexture)) //TODO move out of Main
-			{
-				Plugin.logger().debug("Patching bindFramebufferTexture");
-				for (int i = 0; i < m.instructions.size(); i++)
-				{
-					AbstractInsnNode node = m.instructions.get(i);
-					if (node instanceof MethodInsnNode)
-					{
-						MethodInsnNode mNode = (MethodInsnNode) node;
-						if (mNode.owner.equals("net/minecraft/client/renderer/GlStateManager") && mNode.name.equals(bindTexture))
-						{
-							InsnList toInject = new InsnList();
-							/*
-							toInject.add(new LabelNode()); //OpenGlHelper.setActiveTexture(GL13.GL_TEXTURE1)
-			    			toInject.add(new LdcInsnNode(new Integer(GL13.GL_TEXTURE1)));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/OpenGlHelper", setActiveTexture, "(I)V", false));
-							toInject.add(new LabelNode()); //GL11.bindTexture(GL11.GL_TEXTURE_2D, this.framebufferTexturePos)
-							toInject.add(new VarInsnNode(ALOAD, 0));
-							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", bindTexture, "(I)V", false));
-
-							toInject.add(new LabelNode()); //OpenGlHelper.setActiveTexture(GL_13.GL_TEXTURE0)
-			    			toInject.add(new LdcInsnNode(new Integer(GL13.GL_TEXTURE0)));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/OpenGlHelper", setActiveTexture, "(I)V", false));
-							*/
-							toInject.add(new VarInsnNode(ALOAD, 0));
-							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "bindSecondTex", "(I)V", false));
-							m.instructions.insert(node, toInject);
-							break;
-						}
-					}
-				}
-			}
-			else if (m.name.equals(unbindFramebufferTexture))
-			{
-				Plugin.logger().debug("Patching unbindFramebufferTexture");
-				for (int i = 0; i < m.instructions.size(); i++)
-				{
-					AbstractInsnNode node = m.instructions.get(i);
-					if (node instanceof MethodInsnNode)
-					{
-						MethodInsnNode mNode = (MethodInsnNode) node;
-						if (mNode.owner.equals("net/minecraft/client/renderer/GlStateManager") && mNode.name.equals(bindTexture))
-						{
-							InsnList toInject = new InsnList();
-							toInject.add(new LabelNode()); //OpenGlHelper.setActiveTexture(GL_13.GL_TEXTURE1)
-							toInject.add(new LdcInsnNode(new Integer(GL13.GL_TEXTURE1)));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/OpenGlHelper", setActiveTexture, "(I)V", false));
-							toInject.add(new LabelNode()); //GL11.bindTexture(GL11.GL_TEXTURE_2D, 0)
-							toInject.add(new InsnNode(ICONST_0));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", bindTexture, "(I)V", false));
-
-							toInject.add(new LabelNode()); //OpenGlHelper.setActiveTexture(GL13.GL_TEXTURE0)
-			    			toInject.add(new LdcInsnNode(new Integer(GL13.GL_TEXTURE0)));
-							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/OpenGlHelper", setActiveTexture, "(I)V", false));
-							m.instructions.insert(node, toInject);
-							break;
-						}
-					}
-				}
-			}
 		}
 		ClassWriter writer = new ClassWriter(0);
 		classNode.accept(writer);
@@ -676,6 +623,42 @@ public class Transformer implements IClassTransformer, Opcodes
 						break;
 					}
 				}
+			}
+		}
+		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+		classNode.accept(writer);
+		Plugin.logger().debug("Patching successful");
+		return writer.toByteArray();
+	}
+	
+	public byte[] transformFramebufferUtil(byte[] bytes)
+	{
+		Plugin.logger().debug("Patching extendedshaders.core.FramebufferUtil");
+		ClassNode classNode = new ClassNode();
+		ClassReader classReader = new ClassReader(bytes);
+		classReader.accept(classNode, 0);
+		Iterator<MethodNode> methods = classNode.methods.iterator();
+		boolean canSkipSky = true;
+		while(methods.hasNext())
+		{
+			MethodNode m = methods.next();
+			if (m.name.equals("getFBPosTex"))
+			{
+				Plugin.logger().debug("Replacing getFBPosTex");
+				m.instructions.clear();
+				m.localVariables.clear();
+				m.visitCode();
+				Label l0 = new Label();
+				m.visitLabel(l0);
+				m.visitLineNumber(19, l0);
+				m.visitVarInsn(ALOAD, 0);
+				m.visitFieldInsn(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I");
+				m.visitInsn(IRETURN);
+				Label l1 = new Label();
+				m.visitLabel(l1);
+				m.visitLocalVariable("buf", "Lnet/minecraft/client/shader/Framebuffer;", null, l0, l1, 0);
+				m.visitMaxs(1, 1);
+				m.visitEnd();
 			}
 		}
 		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);

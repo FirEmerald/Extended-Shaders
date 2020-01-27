@@ -19,6 +19,8 @@ public class PostProcessor implements Comparable
 	public String uniformText;
 	/** the priority of this post-processor **/
 	public final int priority;
+	/** locations of set uniforms used to set texture indicies **/
+	public int tex0 = -1, tex1 = -1;
 	/** locations of set uniforms used to find offset pixels **/
 	public int dx = -1, dy = -1;
 	/** location of the uniform for setting the current "eye".<br>

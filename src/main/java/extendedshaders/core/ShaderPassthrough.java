@@ -5,6 +5,7 @@ import extendedshaders.api.Passthrough;
 import extendedshaders.api.PostProcessor;
 import extendedshaders.api.Shader;
 import extendedshaders.api.ShaderRegistry;
+import net.minecraft.client.renderer.GlStateManager;
 
 public class ShaderPassthrough extends Passthrough
 {
@@ -83,15 +84,13 @@ public class ShaderPassthrough extends Passthrough
 			return;
 		}
 		Plugin.logger().debug(Shaders.postProcessorVert);
-		Plugin.logger().debug(fragText);
-		GLSLHelper.runProgram(postProcessor.program);
+		postProcessor.tex0 = GLSLHelper.getUniformLocation(postProcessor.program, "tex0");
+		postProcessor.tex1 = GLSLHelper.getUniformLocation(postProcessor.program, "tex1");
 		postProcessor.dx = GLSLHelper.getUniformLocation(postProcessor.program, "dx");
 		postProcessor.dy = GLSLHelper.getUniformLocation(postProcessor.program, "dy");
 		postProcessor.eye = GLSLHelper.getUniformLocation(postProcessor.program, "eye");
-		GLSLHelper.uniform1i(GLSLHelper.getUniformLocation(postProcessor.program, "tex0"), 0);
-		GLSLHelper.uniform1i(GLSLHelper.getUniformLocation(postProcessor.program, "tex1"), 1);
 		postProcessor.getUniforms(postProcessor.program);
-		GLSLHelper.runProgram(0);
+		Plugin.logger().debug(fragText);
 	}
 	
 	@Override
@@ -120,5 +119,17 @@ public class ShaderPassthrough extends Passthrough
 	public void resumeShaders() 
 	{
 		Main.rebind();
+	}
+
+	@Override
+	public void swapToSecondaryFB()
+	{
+		Main.swapToSecondaryFB();
+	}
+
+	@Override
+	public void swapToMainFB()
+	{
+		Main.swapToMainFB();
 	}
 }
