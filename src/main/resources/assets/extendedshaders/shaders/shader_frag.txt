@@ -139,3 +139,8 @@ void main()
         gl_FragData[0].rgb = mix(fogColor.rgb, gl_FragData[0].rgb, clamp(fogFactor, 0.0, 1.0));
     }
     gl_FragData[1] = vec4(eyePos.xyz, 1.0);
+    if (disableEffects) gl_FragData[1] = vec4(0.0, 0.0, NaN, 1.0);
+    else
+    {
+        gl_FragData[1] = vec4(eyePos.xyz, 1.0);
+        

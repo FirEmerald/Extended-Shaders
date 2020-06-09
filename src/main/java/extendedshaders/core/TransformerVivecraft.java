@@ -79,9 +79,7 @@ public class TransformerVivecraft extends TransformerOptifine
 									crosshairFlag = true;
 									i++;
 									toInject = new InsnList();
-									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "unbind", "()V", false));
-									toInject.add(new LabelNode());
-									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "swapToSecondaryFB", "()V", false));
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "disableEffects", "()V", false));
 									toInject.add(new LabelNode());
 									i += toInject.size();
 									size += toInject.size();
@@ -101,9 +99,7 @@ public class TransformerVivecraft extends TransformerOptifine
 								if (crosshairFlag)
 								{
 									toInject = new InsnList();
-									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "swapToMainFB", "()V", false));
-									toInject.add(new LabelNode());
-									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "rebind", "()V", false));
+									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "reenableEffects", "()V", false));
 									toInject.add(new LabelNode());
 									toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "disableEntity", "()V", false));
 									toInject.add(new LabelNode());

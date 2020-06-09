@@ -122,14 +122,14 @@ public class ShaderPassthrough extends Passthrough
 	}
 
 	@Override
-	public void swapToSecondaryFB()
+	public void disableEffects()
 	{
-		Main.swapToSecondaryFB();
+		Main.disableEffects();
 	}
 
 	@Override
-	public void swapToMainFB()
+	public void reenableEffects()
 	{
-		Main.swapToMainFB();
+		Main.reenableEffects();
 	}
 }

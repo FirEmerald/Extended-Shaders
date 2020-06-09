@@ -15,30 +15,30 @@ public class EventHandler
 	@SubscribeEvent
 	public void onRenderLivingPre(RenderLivingEvent.Pre event)
 	{
-		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 1);
+		Bypass.setIsEntity(true);
 	}
 	
 	@SubscribeEvent
 	public void onRenderLivingPost(RenderLivingEvent.Post event)
 	{
-		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 0);
+		Bypass.setIsEntity(false);
 	}
 	
 	@SubscribeEvent
 	public void onRenderPlayerPre(RenderPlayerEvent.Pre event)
 	{
-		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 1);
+		Bypass.setIsEntity(true);
 	}
 	
 	@SubscribeEvent
 	public void onRenderPlayerPost(RenderPlayerEvent.Post event)
 	{
-		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 0);
+		Bypass.setIsEntity(false);
 	}
 	
 	@SubscribeEvent
 	public void onRenderHand(RenderHandEvent event)
 	{
-		if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, 1);
+		Bypass.setIsEntity(true);
 	}
 }

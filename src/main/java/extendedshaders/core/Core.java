@@ -8,7 +8,9 @@ import com.google.common.eventbus.EventBus;
 import net.minecraftforge.fml.client.FMLFileResourcePack;
 import net.minecraftforge.fml.client.FMLFolderResourcePack;
 import net.minecraftforge.fml.common.DummyModContainer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.LoadController;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModMetadata;
 
 public class Core extends DummyModContainer
@@ -45,7 +47,11 @@ public class Core extends DummyModContainer
     @Override
     public boolean registerBus(EventBus bus, LoadController controller)
     {
-        bus.register(new Main());
-        return true;
+    	if (FMLCommonHandler.instance().getSide().isClient())
+    	{
+            bus.register(new Main());
+            return true;
+    	}
+    	else return false;
     }
 }

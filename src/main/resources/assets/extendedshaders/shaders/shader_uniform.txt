@@ -40,3 +40,5 @@ uniform int OGL_SRC2_RGB[8]; //texture environment RGB source 2
 uniform int OGL_OPERAND2_RGB[8]; //texture environment RGB operand 2
 uniform int OGL_SRC2_ALPHA[8]; //texture environment alpha source 2
 uniform int OGL_OPERAND2_ALPHA[8]; //texture environment alpha operand 2
+uniform bool disableEffects; //disable special shader effects
+uniform float NaN; //Not-a-Number

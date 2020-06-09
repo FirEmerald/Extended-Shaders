@@ -6,5 +6,5 @@ public class Shaders
 {
 	public static final boolean DEOB = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
     
-	protected static String postProcessorFragUniforms, postProcessorVert, postProcessorFrag, shaderUniform, shaderFrag, shaderVert, anaglyphFrag, copyFrag;
+	protected static String postProcessorFragUniforms, postProcessorVert, postProcessorFrag, shaderUniform, shaderFrag, shaderFragPost, shaderVert, shaderVertPost, anaglyphFrag, copyFrag;
 }	

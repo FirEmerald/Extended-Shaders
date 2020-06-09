@@ -154,8 +154,7 @@ public class Main
 	protected static int GL_OPERAND2_RGB = -1;
 	protected static int GL_SRC2_ALPHA = -1;
 	protected static int GL_OPERAND2_ALPHA = -1;
-    @SideOnly(Side.CLIENT)
-    protected static Framebuffer secondary;
+	protected static int disableEffects = -1;
     @SideOnly(Side.CLIENT)
     protected static Framebuffer copy;
     @SideOnly(Side.CLIENT)
@@ -242,7 +241,6 @@ public class Main
         		{
          	       	Minecraft mc = Minecraft.getMinecraft();
         			Framebuffer f = mc.getFramebuffer();
-         	       	secondary = createIfInvalid(secondary, f.framebufferWidth, f.framebufferHeight, true);
          	       	copy = createIfInvalid(copy, f.framebufferWidth, f.framebufferHeight, true);
          	       	cyan = createIfInvalid(cyan, f.framebufferWidth, f.framebufferHeight, true);
          	       	red = createIfInvalid(red, f.framebufferWidth, f.framebufferHeight, true);
@@ -360,19 +358,6 @@ public class Main
 			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 			GlStateManager.bindTexture(0);
 			GL20.glDrawBuffers(buf);
-			{
-				GLSLHelper.runProgram(copyShader);
-				GLSLHelper.uniform1i(copyTex, GlStateManager.activeTextureUnit);
-        		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
-				GlStateManager.bindTexture(secondary.framebufferTexture);
- 				b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
- 				b.pos(0, 0, 1000).tex(0, 0).endVertex();
- 				b.pos(width, 0, 1000).tex(1, 0).endVertex();
- 				b.pos(width, height, 1000).tex(1, 1).endVertex();
- 				b.pos(0, height, 1000).tex(0, 1).endVertex();
- 				t.draw();
- 				secondary.framebufferClear();
-			}
 			GLSLHelper.runProgram(0);
 			GlStateManager.setActiveTexture(GL13.GL_TEXTURE1);
 			GlStateManager.bindTexture(0);
@@ -416,7 +401,6 @@ public class Main
         		if (shader != currentShader)
         		{
         			currentShader = shader;
-            		GLSLHelper.runProgram(currentShaders[currentState] = currentShader);
             		getUniforms(currentShader);
         		}
         		ShaderRegistry.shadersActive = true;
@@ -426,32 +410,14 @@ public class Main
     	}
     }
     
-    private static int prevFB = -1;
-    
-    public static void swapToSecondaryFB()
+    public static void disableEffects()
     {
-    	if (ShaderRegistry.shadersActive || rebindCheck)
-    	{
-    		if (prevFB < 0)
-    		{
-    			prevFB = GlStateManager.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
-    			//copyDepthBuffers(prevFB, secondary.framebufferObject, secondary.framebufferWidth, secondary.framebufferHeight); //respect depth buffer
-    			OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, secondary.framebufferObject);
-    		}
-    	}
+    	Bypass.setDisableEffects(true);
     }
     
-    public static void swapToMainFB()
+    public static void reenableEffects()
     {
-    	if (ShaderRegistry.shadersActive || rebindCheck)
-    	{
-    		if (prevFB >= 0)
-    		{
-    			//copyDepthBuffers(secondary.framebufferObject, prevFB, secondary.framebufferWidth, secondary.framebufferHeight); //respect depth buffer
-    			OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, prevFB);
-    			prevFB = -1;
-    		}
-    	}
+    	Bypass.setDisableEffects(false);
     }
 
     protected static int copyShader = -1;
@@ -589,8 +555,15 @@ public class Main
 		GL_OPERAND2_RGB = GLSLHelper.getUniformLocation(program, "OGL_OPERAND2_RGB");
 		GL_SRC2_ALPHA = GLSLHelper.getUniformLocation(program, "OGL_SRC2_ALPHA");
 		GL_OPERAND2_ALPHA = GLSLHelper.getUniformLocation(program, "OGL_OPERAND2_ALPHA");
+
+		disableEffects = GLSLHelper.getUniformLocation(program, "disableEffects");
+		{
+			int NaN = GLSLHelper.getUniformLocation(program, "NaN");
+			GLSLHelper.uniform1f(NaN, Float.NaN);
+		}
 		
 		for (Shader data : ShaderRegistry.getShaders()) data.getUniforms(program);
+		
 		GLSLHelper.checkGLErrors("shader uniforms");
     }
     
@@ -645,7 +618,7 @@ public class Main
         		GLSLHelper.runProgram(currentShader = 0);
     			return;
     		}
-    		String vertCode = vertTextUniform + vertText + "}";
+    		String vertCode = vertTextUniform + vertText + Shaders.shaderFragPost;
     		Plugin.logger().debug("Vertex Shader:\n" + vertCode);
     		GLSLHelper.shaderSource(vertShader, vertCode);
     		GLSLHelper.compileShader(vertShader);
@@ -669,7 +642,7 @@ public class Main
         		GLSLHelper.runProgram(currentShader = 0);
     			return;
     		}
-    		String fragCode = fragTextUniform + fragText + "}";
+    		String fragCode = fragTextUniform + fragText + Shaders.shaderVertPost;
     		Plugin.logger().debug("Fragment Shader:\n" + fragCode);
     		GLSLHelper.shaderSource(fragShader, fragCode);
     		GLSLHelper.compileShader(fragShader);

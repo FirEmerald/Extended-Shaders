@@ -18,7 +18,9 @@ public class CoreReloadListener implements IResourceManagerReloadListener
 		Shaders.postProcessorFrag = 		readFile("post_processor_frag");
 		Shaders.shaderUniform = 			readFile("shader_uniform");
 		Shaders.shaderFrag = 				readFile("shader_frag");
+		Shaders.shaderFragPost = 			readFile("shader_frag_post");
 		Shaders.shaderVert = 				readFile("shader_vert");
+		Shaders.shaderVertPost = 			readFile("shader_vert_post");
 		Shaders.copyFrag = 					readFile("copy_frag");
 		Shaders.anaglyphFrag = 				readFile("anaglyph_frag");
 		ShaderRegistry.hasChanged = true;
@@ -31,7 +33,6 @@ public class CoreReloadListener implements IResourceManagerReloadListener
 		if (Main.anaglyphShader <= 0) FMLClientHandler.instance().haltGame("failed to create anaglyph shader!", new Exception());
 		Main.anaglyphCyan = GLSLHelper.getUniformLocation(Main.anaglyphShader, "cyan");
 		Main.anaglyphRed = GLSLHelper.getUniformLocation(Main.anaglyphShader, "red");
-		
 	}
 	
 	public static String readFile(String file)
