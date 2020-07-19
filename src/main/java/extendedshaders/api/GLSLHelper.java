@@ -385,6 +385,7 @@ public class GLSLHelper
             API.logger.error("@ " + location);
             API.logger.error(i + ": " + s1);
             while ((i = GL11.glGetError()) != 0) API.logger.error(i + ": " + s1);
+            //Thread.dumpStack();
         }
     }
 }

@@ -5,9 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -18,6 +22,9 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+
 import com.google.common.eventbus.Subscribe;
 
 import extendedshaders.api.*;
@@ -38,10 +45,12 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -161,7 +170,92 @@ public class Main
     protected static Framebuffer cyan;
     @SideOnly(Side.CLIENT)
     protected static Framebuffer red;
+    @SideOnly(Side.CLIENT)
+    protected static Map<Framebuffer, Map<FramebufferAttachment, Integer>> attachments;
     
+    static
+    {
+    	if (FMLLaunchHandler.side().isClient()) doClientInit();
+    }
+
+    @SideOnly(Side.CLIENT)
+    protected static void doClientInit()
+    {
+    	attachments = new HashMap<>();
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onFramebufferCreateGenTextures(Framebuffer f)
+    {
+    	Map<FramebufferAttachment, Integer> map = new HashMap<>();
+    	for (FramebufferAttachment a : FramebufferAttachmentRegistry.getAttachments()) map.put(a, TextureUtil.glGenTextures());
+    	attachments.put(f, map);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onFramebufferCreateSetTextures(Framebuffer f)
+    {
+    	attachments.get(f).forEach((a, tex) -> {
+    		GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex);
+    		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, a.internalformat, f.framebufferTextureWidth, f.framebufferTextureHeight, 0, a.format, a.type, (IntBuffer) null);
+    	});
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onFramebufferCreateBindTextures(Framebuffer f)
+    {
+    	attachments.get(f).forEach((a, tex) -> {
+    		GLSLHelper.framebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0 + a.bufferIndex, GL11.GL_TEXTURE_2D, tex, 0);
+    	});
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onFramebufferSetFilter(Framebuffer f)
+    {
+    	attachments.get(f).values().forEach(tex -> {
+    		GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+    	});
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onFramebufferDelete(Framebuffer f)
+    {
+    	attachments.remove(f).values().forEach(TextureUtil::deleteTexture);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public static void onAddFramebufferAttachment(FramebufferAttachment attachment)
+    {
+		int prevFB = GL11.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING);
+    	attachments.forEach((f, map) -> {
+			int tex = TextureUtil.glGenTextures();
+			map.put(attachment, tex);
+    		GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex);
+    		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, attachment.internalformat, f.framebufferTextureWidth, f.framebufferTextureHeight, 0, attachment.format, attachment.type, (ByteBuffer) null);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
+    		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+			GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
+    		GLSLHelper.framebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0 + attachment.bufferIndex, GL11.GL_TEXTURE_2D, tex, 0);
+			GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, prevFB);
+    	});
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+    }
+    
+    @SideOnly(Side.CLIENT)
+    public static void onRemoveFramebufferAttachment(FramebufferAttachment attachment)
+    {
+    	attachments.values().forEach(map -> {
+			GLSLHelper.framebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0 + attachment.bufferIndex, GL11.GL_TEXTURE_2D, 0, 0);
+			TextureUtil.deleteTexture(map.remove(attachment));
+    	});
+    }
+
     public static Framebuffer createIfInvalid(Framebuffer f, int w, int h, boolean useDepth)
     {
     	if (f == null || f.framebufferWidth != w || f.framebufferHeight != h)
@@ -175,15 +269,19 @@ public class Main
     public static void clearPos(Framebuffer f)
     {
     	GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
-    	IntBuffer buf = BufferUtils.createIntBuffer(1);
-    	buf.put(GL30.GL_COLOR_ATTACHMENT1);
-    	buf.flip();
-    	GL20.glDrawBuffers(buf);
+    	{
+        	IntBuffer buf = BufferUtils.createIntBuffer(1);
+        	buf.put(GL30.GL_COLOR_ATTACHMENT1);
+        	buf.flip();
+        	GL20.glDrawBuffers(buf);
+    	}
+    	GlStateManager.clearColor(0f, 0f, 0f, 1f);
+    	GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
+    	/*
     	int width = f.framebufferWidth;
     	int height = f.framebufferHeight;
     	GlStateManager.depthMask(false);
     	GlStateManager.disableTexture2D();
-    	GlStateManager.clearColor(0f, 0f, 0f, 1f);
     	GlStateManager.color(0f, 0f, 0f, 1f);
 		GlStateManager.matrixMode(GL11.GL_PROJECTION);
 		GlStateManager.pushMatrix();
@@ -200,17 +298,26 @@ public class Main
 		b.pos(width, height, 2).tex(1, 1).endVertex();
 		b.pos(0, height, 2).tex(0, 1).endVertex();
 		t.draw();
+		*/
+		attachments.get(f).keySet().forEach(a -> a.clear.accept(f));
+		/*
 		GlStateManager.matrixMode(GL11.GL_PROJECTION);
 		GlStateManager.popMatrix();
 		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 		GlStateManager.popMatrix();
     	GlStateManager.depthMask(true);
     	GlStateManager.enableTexture2D();
-		buf = BufferUtils.createIntBuffer(2);
-		buf.put(EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT);
-		buf.put(EXTFramebufferObject.GL_COLOR_ATTACHMENT1_EXT);
-		buf.flip();
-		GL20.glDrawBuffers(buf);
+    	*/
+    	Set<FramebufferAttachment> att = attachments.get(f).keySet();
+    	int size = att.size() + 2;
+    	{
+        	IntBuffer buf = BufferUtils.createIntBuffer(size);
+        	buf.put(EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT);
+        	buf.put(EXTFramebufferObject.GL_COLOR_ATTACHMENT1_EXT);
+        	att.forEach(attachment -> buf.put(EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT + attachment.bufferIndex));
+    		buf.flip();
+    		GL20.glDrawBuffers(buf);
+    	}
     }
     
     public static void runShaders(float partialTicks)
@@ -264,7 +371,12 @@ public class Main
 			GL11.glDrawBuffer(mode);
 			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 		}
-		if (src.useDepth && des.useDepth) GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+		if (src.useDepth && des.useDepth && false) //TODO fix
+		{
+			GL11.glReadBuffer(GL30.GL_DEPTH_ATTACHMENT);
+			GL11.glDrawBuffer(GL30.GL_DEPTH_ATTACHMENT);
+			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+		}
 		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
     }
@@ -312,8 +424,19 @@ public class Main
     		int unit = GlStateManager.activeTextureUnit + OpenGlHelper.defaultTexUnit;
         	if (posts.length > 0 && GLSLHelper.framebuffersEnabled())
         	{
+        		Map<FramebufferAttachment, Integer> map = attachments.get(copy);
+        		map.forEach((attachment, tex) -> attachment.textureIndex = tex);
         		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
         		GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+        		int[] copyModes = new int[map.size() + 2];
+        		copyModes[0] = GL30.GL_COLOR_ATTACHMENT0;
+        		copyModes[1] = GL30.GL_COLOR_ATTACHMENT1;
+        		int index = 2;
+        		for (FramebufferAttachment attachment : map.keySet())
+        		{
+        			copyModes[index] = GL30.GL_COLOR_ATTACHMENT0 + attachment.bufferIndex;
+        			index++;
+        		}
  	       		for (PostProcessor post : posts)
  	       		{
  	       			if (post.program > 0)
@@ -333,12 +456,13 @@ public class Main
  	 	       				GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
  	 	       				copy.framebufferClear();
  	 	        	       	clearPos(copy);
- 	 	       				copyFramebuffers(f, copy, GL30.GL_COLOR_ATTACHMENT0, GL30.GL_COLOR_ATTACHMENT1);
+ 	 	       				copyFramebuffers(f, copy, copyModes);
  	 	       				GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
  	 	       				//copy.bindFramebufferTexture();
  	 	       				GlStateManager.bindTexture(copy.framebufferTexture);
  	 	       				GlStateManager.setActiveTexture(GL13.GL_TEXTURE1);
  	 	       				GlStateManager.bindTexture(FramebufferUtil.getFBPosTex(copy));
+ 	 	       				post.onIteration(i, partialTicks);
  	 	       				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
  	 	       				b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
  	 	       				b.pos(0, 0, 1000).tex(0, 0).endVertex();
@@ -347,6 +471,7 @@ public class Main
  	 	       				b.pos(0, height, 1000).tex(0, 1).endVertex();
  	 	       				t.draw();
  	 	       				MinecraftForge.EVENT_BUS.post(new PostProcessorEvent.Stop(partialTicks, post, i));
+ 	 	       				GLSLHelper.checkGLErrors("Post Processing: " + post.toString() + " iteration " + i);
  	       				}
  	       			}
  	       		}

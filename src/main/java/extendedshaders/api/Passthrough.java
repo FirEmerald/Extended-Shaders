@@ -17,4 +17,8 @@ public class Passthrough
 	public void disableEffects() {}
 	/** re-enables shader effects for rendered geometry **/
 	public void reenableEffects() {}
+	/** after adding a framebuffer attachment. You won't need this. **/
+	public void onAddFramebufferAttachment(FramebufferAttachment attachment) {}
+	/** after removing a framebuffer attachment. You won't need this. **/
+	public void onRemoveFramebufferAttachment(FramebufferAttachment attachment) {}
 }

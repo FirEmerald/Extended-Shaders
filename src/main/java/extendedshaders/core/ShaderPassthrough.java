@@ -1,5 +1,6 @@
 package extendedshaders.core;
 
+import extendedshaders.api.FramebufferAttachment;
 import extendedshaders.api.GLSLHelper;
 import extendedshaders.api.Passthrough;
 import extendedshaders.api.PostProcessor;
@@ -131,5 +132,17 @@ public class ShaderPassthrough extends Passthrough
 	public void reenableEffects()
 	{
 		Main.reenableEffects();
+	}
+
+	@Override
+	public void onAddFramebufferAttachment(FramebufferAttachment attachment)
+	{
+		Main.onAddFramebufferAttachment(attachment);
+	}
+
+	@Override
+	public void onRemoveFramebufferAttachment(FramebufferAttachment attachment)
+	{
+		Main.onRemoveFramebufferAttachment(attachment);
 	}
 }

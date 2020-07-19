@@ -386,6 +386,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "deleteFbTex", "(I)I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferDelete", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
+							
 							m.instructions.insert(mNode, toInject);
 							break;
 						}
@@ -409,6 +412,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/texture/TextureUtil", glGenTextures, "()I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
+							
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateGenTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
 							
 							i += toInject.size();
 							size += toInject.size();
@@ -440,6 +446,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new InsnNode(ACONST_NULL));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", glTexImage2D, "(IIIIIIIILjava/nio/IntBuffer;)V", false));
 
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateSetTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
+
 							i += toInject.size();
 							size += toInject.size();
 							m.instructions.insert(mNode, toInject);
@@ -455,6 +464,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new InsnNode(ICONST_0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/api/GLSLHelper", "framebufferTexture2D", "(IIIII)V", false));
+
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateBindTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
 
 							i += toInject.size();
 							size += toInject.size();
@@ -481,6 +493,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/texture/TextureUtil", glGenTextures, "()I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateGenTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
+							
 							i += toInject.size();
 							size += toInject.size();
 							m.instructions.insert(fNode, toInject);
@@ -511,6 +526,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new InsnNode(ACONST_NULL));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", glTexImage2D, "(IIIIIIIILjava/nio/IntBuffer;)V", false));
 
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateSetTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
+
 							i += toInject.size();
 							size += toInject.size();
 							m.instructions.insert(mNode, toInject);
@@ -526,6 +544,9 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new InsnNode(ICONST_0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/api/GLSLHelper", "framebufferTexture2D", "(IIIII)V", false));
+
+							toInject.add(new VarInsnNode(ALOAD, 0));
+							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateBindTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
 
 							i += toInject.size();
 							size += toInject.size();
@@ -575,6 +596,9 @@ public class Transformer implements IClassTransformer, Opcodes
 								toInject.add(new LdcInsnNode(new Integer(GL11.GL_TEXTURE_WRAP_T)));
 								toInject.add(new LdcInsnNode(new Integer(GL11.GL_CLAMP)));
 								toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", glTexParameteri, "(III)V", false));
+								
+								toInject.add(new VarInsnNode(ALOAD, 0));
+								toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferSetFilter", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
 								
 								m.instructions.insert(mNode, toInject);
 								break;

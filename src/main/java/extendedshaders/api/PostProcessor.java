@@ -112,6 +112,9 @@ public class PostProcessor implements Comparable
 	/** called after the post processor is bound - use this to set uniforms if needed.*/
 	public void onBind(float partialTicks) {}
 	
+	/** called on each iteration of the post processor - use this to set uniforms if needed.*/
+	public void onIteration(int iteration, float partialTicks) {}
+	
 	/**
 	 * how many times should this post processor run? useful for screen distortion by entities.
 	 * @return the number of iterations
