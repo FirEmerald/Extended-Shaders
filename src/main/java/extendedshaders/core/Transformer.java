@@ -432,7 +432,7 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", bindTexture, "(I)V", false));
 							
-							toInject.add(new LabelNode()); //GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA32F, this.framebufferTextureWidth, this.framebufferTextureHeight, 0, GL11.GL_RGBA, GL30.GL_FLOAT, null)
+							toInject.add(new LabelNode()); //GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA32F, this.framebufferTextureWidth, this.framebufferTextureHeight, 0, GL11.GL_RGBA, GL11.GL_FLOAT, null)
 							toInject.add(new LdcInsnNode(new Integer(GL11.GL_TEXTURE_2D)));
 							toInject.add(new InsnNode(ICONST_0));
 							toInject.add(new LdcInsnNode(new Integer(GL30.GL_RGBA32F)));

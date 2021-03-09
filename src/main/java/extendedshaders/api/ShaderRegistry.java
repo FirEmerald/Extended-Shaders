@@ -2,9 +2,7 @@ package extendedshaders.api;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /** used to turn shaders on and off, by adding and removing them from a registry.<br>
  * keep in mind changes do not effect until the beginning of the next render tick, or when {@link Passthrough#forceShaderCompile()} is run. **/

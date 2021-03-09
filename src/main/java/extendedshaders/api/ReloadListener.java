@@ -9,6 +9,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 
 /** DO NOT TOUCH THESE METHODS. they are used to ensure shaders and post-processors reload when resources are reloaded, even if Extended Shaders is not installed **/
+@SuppressWarnings("deprecation")
 public class ReloadListener implements IResourceManagerReloadListener
 {
 	private static ArrayList<WeakReference<Shader>> data = new ArrayList<WeakReference<Shader>>();

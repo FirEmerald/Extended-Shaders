@@ -5,7 +5,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 
 /** Use this class to create a post-render effect, such as blur. **/
-public class PostProcessor implements Comparable
+public class PostProcessor implements Comparable<PostProcessor>
 {
 	/** the shader program of this post-processor **/
 	public int program = -1;
@@ -103,10 +103,9 @@ public class PostProcessor implements Comparable
 
 	/** used for sorting purposes **/
 	@Override
-	public int compareTo(Object o)
+	public int compareTo(PostProcessor o)
 	{
-		if (o instanceof PostProcessor) return ((PostProcessor) o).priority - priority;
-		else return 0;
+		return o.priority - priority;
 	}
 	
 	/** called after the post processor is bound - use this to set uniforms if needed.*/

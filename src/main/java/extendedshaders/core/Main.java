@@ -277,37 +277,7 @@ public class Main
     	}
     	GlStateManager.clearColor(0f, 0f, 0f, 1f);
     	GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
-    	/*
-    	int width = f.framebufferWidth;
-    	int height = f.framebufferHeight;
-    	GlStateManager.depthMask(false);
-    	GlStateManager.disableTexture2D();
-    	GlStateManager.color(0f, 0f, 0f, 1f);
-		GlStateManager.matrixMode(GL11.GL_PROJECTION);
-		GlStateManager.pushMatrix();
-		GlStateManager.loadIdentity();
-		GlStateManager.ortho(0, width, 0, height, 1, 3);
-		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-		GlStateManager.pushMatrix();
-		GlStateManager.loadIdentity();
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder b = t.getBuffer();
-		b.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-		b.pos(0, 0, 2).tex(0, 0).endVertex();
-		b.pos(width, 0, 2).tex(1, 0).endVertex();
-		b.pos(width, height, 2).tex(1, 1).endVertex();
-		b.pos(0, height, 2).tex(0, 1).endVertex();
-		t.draw();
-		*/
 		attachments.get(f).keySet().forEach(a -> a.clear.accept(f));
-		/*
-		GlStateManager.matrixMode(GL11.GL_PROJECTION);
-		GlStateManager.popMatrix();
-		GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-		GlStateManager.popMatrix();
-    	GlStateManager.depthMask(true);
-    	GlStateManager.enableTexture2D();
-    	*/
     	Set<FramebufferAttachment> att = attachments.get(f).keySet();
     	int size = att.size() + 2;
     	{
@@ -371,14 +341,12 @@ public class Main
 			GL11.glDrawBuffer(mode);
 			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 		}
-		if (src.useDepth && des.useDepth && false) //TODO fix
-		{
-			GL11.glReadBuffer(GL30.GL_DEPTH_ATTACHMENT);
-			GL11.glDrawBuffer(GL30.GL_DEPTH_ATTACHMENT);
-			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
-		}
 		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+		if (src.useDepth && des.useDepth)
+		{
+			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+		}
     }
     
     public static void copyDepthBuffers(int src, int des, int w, int h)
@@ -458,7 +426,6 @@ public class Main
  	 	        	       	clearPos(copy);
  	 	       				copyFramebuffers(f, copy, copyModes);
  	 	       				GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
- 	 	       				//copy.bindFramebufferTexture();
  	 	       				GlStateManager.bindTexture(copy.framebufferTexture);
  	 	       				GlStateManager.setActiveTexture(GL13.GL_TEXTURE1);
  	 	       				GlStateManager.bindTexture(FramebufferUtil.getFBPosTex(copy));
