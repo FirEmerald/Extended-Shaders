@@ -8,6 +8,7 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 
+@SuppressWarnings("deprecation")
 public class CoreReloadListener implements IResourceManagerReloadListener
 {
 	@Override
@@ -34,7 +35,7 @@ public class CoreReloadListener implements IResourceManagerReloadListener
 		Main.anaglyphCyan = GLSLHelper.getUniformLocation(Main.anaglyphShader, "cyan");
 		Main.anaglyphRed = GLSLHelper.getUniformLocation(Main.anaglyphShader, "red");
 	}
-	
+
 	public static String readFile(String file)
 	{
 		try

@@ -6,7 +6,6 @@ import extendedshaders.api.Passthrough;
 import extendedshaders.api.PostProcessor;
 import extendedshaders.api.Shader;
 import extendedshaders.api.ShaderRegistry;
-import net.minecraft.client.renderer.GlStateManager;
 
 public class ShaderPassthrough extends Passthrough
 {
@@ -14,7 +13,7 @@ public class ShaderPassthrough extends Passthrough
 	{
 		instance = this;
 	}
-	
+
 	@Override
 	public void loadPostProcessor(PostProcessor postProcessor)
 	{
@@ -93,7 +92,7 @@ public class ShaderPassthrough extends Passthrough
 		postProcessor.getUniforms(postProcessor.program);
 		Plugin.logger().debug(fragText);
 	}
-	
+
 	@Override
 	public void updateShaderStates()
 	{
@@ -109,15 +108,15 @@ public class ShaderPassthrough extends Passthrough
 			for (int i = 0; i < shaders.length; i++) shaders[i].copyUniforms(prevProg, prevStates[i], prog, ShaderRegistry.getShaderState(shaders[i]));
 		}
 	}
-	
+
 	@Override
 	public void pauseShaders()
 	{
 		Main.unbind();
 	}
-	
+
 	@Override
-	public void resumeShaders() 
+	public void resumeShaders()
 	{
 		Main.rebind();
 	}

@@ -23,7 +23,7 @@ public class ShaderSingle extends Shader
 		this.state = new ShaderData(uniformFileVertex, shaderFileVertex, uniformFileFragment, shaderFileFragment);
 		this.onReload(Minecraft.getMinecraft().getResourceManager());
 	}
-	
+
 	@Override
 	public void onReload(IResourceManager manager)
 	{

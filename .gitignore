@@ -23,3 +23,23 @@
 hs_err_pid*
 
 /src/test
+/bin/
+/build/
+.gradle/
+.classpath
+.project
+.settings/
+CREDITS
+eclipse/
+Extended-Shaders_Client.launch
+Extended-Shaders_Server.launch
+gradle/
+forge-1.12.2-14.23.5.2838-changelog.txt
+gradle.properties
+gradlew
+gradlew.bat
+LICENSE-Paulscode IBXM Library.txt
+LICENSE-Paulscode SoundSystem CodecIBXM.txt
+LICENSE.txt
+README.txt
+CREDITS.txt

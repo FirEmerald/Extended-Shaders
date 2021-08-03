@@ -1,42 +1,41 @@
 package extendedshaders.core;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
-
-import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
 
 import com.google.common.eventbus.Subscribe;
 
-import extendedshaders.api.*;
+import extendedshaders.api.FramebufferAttachment;
+import extendedshaders.api.FramebufferAttachmentRegistry;
+import extendedshaders.api.GLSLHelper;
+import extendedshaders.api.PostProcessor;
+import extendedshaders.api.PostProcessorEvent;
+import extendedshaders.api.PostProcessorRegistry;
+import extendedshaders.api.ReloadListener;
+import extendedshaders.api.Shader;
+import extendedshaders.api.ShaderEvent;
+import extendedshaders.api.ShaderRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IReloadableResourceManager;
@@ -45,7 +44,6 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -67,7 +65,7 @@ public class Main
 		}
 		return false;
     }
-    
+
     @Subscribe
     public void handleModStateEvent(FMLEvent event)
     {
@@ -125,7 +123,7 @@ public class Main
     protected static int[] currentShaders = new int[0];
     protected static int currentShader = 0;
     protected static int currentState = 0;
-    protected static final HashMap<Shader, Integer> OFFSETS = new HashMap<Shader, Integer>();
+    protected static final HashMap<Shader, Integer> OFFSETS = new HashMap<>();
     protected static int useNormals = -1;
     protected static int useFog = -1;
     protected static int fogDensity = -1;
@@ -172,7 +170,7 @@ public class Main
     protected static Framebuffer red;
     @SideOnly(Side.CLIENT)
     protected static Map<Framebuffer, Map<FramebufferAttachment, Integer>> attachments;
-    
+
     static
     {
     	if (FMLLaunchHandler.side().isClient()) doClientInit();
@@ -246,7 +244,7 @@ public class Main
     	});
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
     }
-    
+
     @SideOnly(Side.CLIENT)
     public static void onRemoveFramebufferAttachment(FramebufferAttachment attachment)
     {
@@ -265,7 +263,7 @@ public class Main
     	}
     	else return f;
     }
-    
+
     public static void clearPos(Framebuffer f)
     {
     	GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, f.framebufferObject);
@@ -289,7 +287,7 @@ public class Main
     		GL20.glDrawBuffers(buf);
     	}
     }
-    
+
     public static void runShaders(float partialTicks)
     {
     	ShaderRegistry.rendering = true;
@@ -333,10 +331,8 @@ public class Main
     {
 		GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, src.framebufferObject);
 		GLSLHelper.bindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, des.framebufferObject);
-		boolean useDepth = src.useDepth && des.useDepth;
-		for (int i = 0; i < modes.length; i++)
-		{
-			int mode = modes[i];
+		//boolean useDepth = src.useDepth && des.useDepth;
+		for (int mode : modes) {
 			GL11.glReadBuffer(mode);
 			GL11.glDrawBuffer(mode);
 			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
@@ -348,7 +344,7 @@ public class Main
 			GLSLHelper.blitFramebuffer(0, 0, src.framebufferWidth, src.framebufferHeight, 0, 0, des.framebufferWidth, des.framebufferHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
 		}
     }
-    
+
     public static void copyDepthBuffers(int src, int des, int w, int h)
     {
 		GLSLHelper.bindFramebuffer(GL30.GL_FRAMEBUFFER, src);
@@ -455,7 +451,7 @@ public class Main
 			GlStateManager.bindTexture(0);
     		GlStateManager.setActiveTexture(unit);
 			GlStateManager.bindTexture(0);
-			
+
         	if (mc.gameSettings.anaglyph)
         	{
         		copyFramebuffers(f, EntityRenderer.anaglyphField == 0 ? cyan : red, GL30.GL_COLOR_ATTACHMENT0);
@@ -469,9 +465,9 @@ public class Main
  	       	GlStateManager.matrixMode(GL11.GL_MODELVIEW);
     	}
     }
-    
+
     private static boolean rebindCheck = false;
-    
+
     public static void unbind()
     {
     	if (ShaderRegistry.shadersActive)
@@ -481,7 +477,7 @@ public class Main
     		rebindCheck = true;
     	}
     }
-    
+
     public static void rebind()
     {
     	if (rebindCheck)
@@ -501,12 +497,12 @@ public class Main
         	rebindCheck = false;
     	}
     }
-    
+
     public static void disableEffects()
     {
     	Bypass.setDisableEffects(true);
     }
-    
+
     public static void reenableEffects()
     {
     	Bypass.setDisableEffects(false);
@@ -516,7 +512,7 @@ public class Main
     protected static int copyTex;
     protected static int anaglyphShader = -1;
     protected static int anaglyphCyan, anaglyphRed;
-    
+
     public static void endRender()
     {
     	Minecraft mc = Minecraft.getMinecraft();
@@ -596,13 +592,13 @@ public class Main
     {
     	return MinecraftForge.EVENT_BUS.post(new ShaderEvent.RenderSky(partialTicks));
     }
-    
+
     public static int deleteFbTex(int tex)
     {
  	   if (tex != -1) TextureUtil.deleteTexture(tex);
  	   return -1;
     }
-    
+
     private static void getUniforms(int program)
     {
 		useNormals = GLSLHelper.getUniformLocation(program, "useNormals");
@@ -628,7 +624,7 @@ public class Main
 		texGenMode_p = GLSLHelper.getUniformLocation(program, "texGenMode_p");
 		texGen_q = GLSLHelper.getUniformLocation(program, "texGen_q");
 		texGenMode_q = GLSLHelper.getUniformLocation(program, "texGenMode_q");
-		
+
 	    GL_TEXTURE_ENV_MODE = GLSLHelper.getUniformLocation(program, "OGL_TEXTURE_ENV_MODE");
 	    GL_TEXTURE_ENV_COLOR = GLSLHelper.getUniformLocation(program, "OGL_TEXTURE_ENV_COLOR");
 	    GL_COMBINE_RGB = GLSLHelper.getUniformLocation(program, "OGL_COMBINE_RGB");
@@ -653,12 +649,12 @@ public class Main
 			int NaN = GLSLHelper.getUniformLocation(program, "NaN");
 			GLSLHelper.uniform1f(NaN, Float.NaN);
 		}
-		
+
 		for (Shader data : ShaderRegistry.getShaders()) data.getUniforms(program);
-		
+
 		GLSLHelper.checkGLErrors("shader uniforms");
     }
-    
+
     public static void runShader()
     {
     	int newState = 0;
@@ -669,7 +665,7 @@ public class Main
     		currentState = newState;
     	}
     	int shader = currentShaders[currentState];
-    	
+
     	if (shader > 0) //shader valid, run
     	{
     		GLSLHelper.runProgram(shader);
@@ -803,7 +799,7 @@ public class Main
     		ShaderRegistry.shadersActive = true;
     	}
     }
-    
+
     protected static void createShaders()
     {
     	currentShader = 0;
@@ -819,7 +815,7 @@ public class Main
     	Plugin.logger().info("Creating shaders for " + numShaders + " different possible shader state(s).");
     	currentShaders = new int[numShaders];
     }
-    
+
     protected static int createShader(String vert, String frag)
     {
 		int vertShader = GLSLHelper.createVertShader();

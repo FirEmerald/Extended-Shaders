@@ -2,6 +2,7 @@ package extendedshaders.api;
 
 import java.nio.IntBuffer;
 import java.util.function.Consumer;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -35,7 +36,7 @@ public class FramebufferAttachment
 	{
 		this(internalFormat, format, type, clearR, clearG, clearB, 1);
 	}
-	
+
 	public FramebufferAttachment(int internalFormat, int format, int type, float clearR, float clearG, float clearB, float clearA)
 	{
 		this.internalformat = internalFormat;
@@ -52,7 +53,7 @@ public class FramebufferAttachment
 	    	GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT);
 		};
 	}
-	
+
 	public FramebufferAttachment(int internalFormat, int format, int type, Consumer<Framebuffer> clear)
 	{
 		this.internalformat = internalFormat;
@@ -60,7 +61,7 @@ public class FramebufferAttachment
 		this.type = type;
 		this.clear = clear;
 	}
-	
+
 	@Override
 	public String toString()
 	{

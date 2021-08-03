@@ -12,22 +12,22 @@ import net.minecraft.client.resources.IResourceManagerReloadListener;
 @SuppressWarnings("deprecation")
 public class ReloadListener implements IResourceManagerReloadListener
 {
-	private static ArrayList<WeakReference<Shader>> data = new ArrayList<WeakReference<Shader>>();
-	private static ArrayList<WeakReference<PostProcessor>> post = new ArrayList<WeakReference<PostProcessor>>();
+	private static ArrayList<WeakReference<Shader>> data = new ArrayList<>();
+	private static ArrayList<WeakReference<PostProcessor>> post = new ArrayList<>();
 	public static final ReloadListener INSTANCE;
 	static
 	{
 		((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(INSTANCE = new ReloadListener());
 	}
-	
+
 	protected static void addData(Shader shaderData)
 	{
-		data.add(new WeakReference<Shader>(shaderData));
+		data.add(new WeakReference<>(shaderData));
 	}
-	
+
 	protected static void addPost(PostProcessor postProcessor)
 	{
-		post.add(new WeakReference<PostProcessor>(postProcessor));
+		post.add(new WeakReference<>(postProcessor));
 	}
 
 	@Override

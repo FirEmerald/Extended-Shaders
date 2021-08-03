@@ -22,7 +22,7 @@ public class ShaderData
 	public final ResourceLocation shaderFileFragment;
 	/** the location of the uniforms/variables/constants for this fragment shader **/
 	public final ResourceLocation uniformFileFragment;
-	
+
 	/**
 	 * Creates a shader.
 	 * @param uniformFile the location of the uniforms/variables/constants.
@@ -37,7 +37,7 @@ public class ShaderData
 		this.shaderFileFragment = shaderFileFragment;
 		this.onReload(Minecraft.getMinecraft().getResourceManager());
 	}
-	
+
 	/** loads the shader text **/
 	public void onReload(IResourceManager manager)
 	{

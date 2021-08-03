@@ -1,5 +1,6 @@
 package extendedshaders.api;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -7,14 +8,14 @@ public class PostProcessorEvent extends Event
 {
 	public final float partialTicks;
 	public final PostProcessor processor;
-	
+
 	/** ONLY USED BY FORGE!!! **/
 	public PostProcessorEvent()
 	{
 		this.partialTicks = 0;
 		this.processor = null;
 	}
-	
+
 	private PostProcessorEvent(float partialTicks, PostProcessor processor)
 	{
 		this.partialTicks = partialTicks;
@@ -39,7 +40,7 @@ public class PostProcessorEvent extends Event
 		{
 			super();
 		}
-		
+
 		public Bind(float partialTicks, PostProcessor processor)
 		{
 			super(partialTicks, processor);
@@ -67,7 +68,7 @@ public class PostProcessorEvent extends Event
 			super();
 			this.iteration = 0;
 		}
-		
+
 		public Start(float partialTicks, PostProcessor processor, int iteration)
 		{
 			super(partialTicks, processor);
@@ -93,7 +94,7 @@ public class PostProcessorEvent extends Event
 			super();
 			this.iteration = 0;
 		}
-		
+
 		public Stop(float partialTicks, PostProcessor processor, int iteration)
 		{
 			super(partialTicks, processor);

@@ -1,5 +1,6 @@
 package extendedshaders.api;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -11,7 +12,7 @@ public abstract class ShaderEvent extends Event
 	{
 		partialTicks = 0;
 	}
-	
+
 	private ShaderEvent(float partialTicks)
 	{
 		this.partialTicks = partialTicks;
@@ -35,7 +36,7 @@ public abstract class ShaderEvent extends Event
 		{
 			super();
 		}
-		
+
 		public RenderSky(float partialTicks)
 		{
 			super(partialTicks);
@@ -57,7 +58,7 @@ public abstract class ShaderEvent extends Event
 		{
 			super();
 		}
-		
+
 		public Start(float partialTicks)
 		{
 			super(partialTicks);
@@ -78,7 +79,7 @@ public abstract class ShaderEvent extends Event
 		{
 			super();
 		}
-		
+
 		public Stop(float partialTicks)
 		{
 			super(partialTicks);

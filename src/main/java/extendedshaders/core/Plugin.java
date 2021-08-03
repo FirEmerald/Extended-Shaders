@@ -9,7 +9,10 @@ import org.apache.logging.log4j.Logger;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.IFMLCallHook;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.*;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.Name;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.SortingIndex;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraftforge.fml.relauncher.Side;
 
 @SortingIndex(value = Integer.MAX_VALUE)
@@ -21,27 +24,27 @@ public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
     public static final String MC_VERSION = "[1.12.2]";
     public static final String ES_VERSION = "[7.5]";
     private File location;
-    
+
     public final Logger logger = LogManager.getLogger("Extended Shaders");
-    
+
     public static Logger logger()
     {
     	return instance.logger;
     }
-    
+
     private static Plugin instance;
-    
+
     public static Plugin instance()
     {
     	return instance;
     }
-    
+
     public static enum Variant
     {
     	VANILLA("extendedshaders.core.Transformer"),
     	OPTIFINE("extendedshaders.core.TransformerOptifine", true),
     	VIVECRAFT("extendedshaders.core.TransformerVivecraft", true);
-    	
+
     	public final String transformerClass;
     	public final boolean isOptifineEnabled;
 
@@ -50,7 +53,7 @@ public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
     		this.transformerClass = transformerClass;
     		this.isOptifineEnabled = isOptifineEnabled;
     	}
-    	
+
     	Variant(String transformerClass)
     	{
     		this(transformerClass, false);
@@ -60,7 +63,7 @@ public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
 	public static final String VIVECRAFT_TEST_CLASS = "org.vivecraft.main.VivecraftMain";
 	public static final String OPTIFINE_TEST_CLASS = "optifine.OptiFineClassTransformer";
 	private static Variant variant = null;
-	
+
 	private static Variant getVariantOriginal()
 	{
 		if (FMLLaunchHandler.isDeobfuscatedEnvironment()) return Variant.VANILLA;
@@ -76,23 +79,23 @@ public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
 		catch (ClassNotFoundException e) {}
 		return Variant.VANILLA;
 	}
-	
+
 	public static Variant getVariant()
 	{
 		if (variant == null) variant = getVariantOriginal();
 		return variant;
 	}
-    
+
     public Plugin()
     {
     	instance = this;
     }
-    
+
     public File getLocation()
     {
     	return location;
     }
-    
+
 	@Override
 	public Void call() throws Exception
 	{

@@ -9,7 +9,7 @@ public class FramebufferAttachmentRegistry
 {
 	private static final List<FramebufferAttachment> ATTACHMENTS = new ArrayList<>(); //TODO ensure not too many attachments
 	private static int numAttachments = 0;
-	
+
 	public static void addAttachment(FramebufferAttachment data)
 	{
 		if (!ATTACHMENTS.contains(data))
@@ -27,7 +27,7 @@ public class FramebufferAttachmentRegistry
 			Passthrough.instance.onAddFramebufferAttachment(data);
 		}
 	}
-	
+
 	public static void removeAttachment(FramebufferAttachment data)
 	{
 		if (ATTACHMENTS.contains(data))
@@ -37,7 +37,7 @@ public class FramebufferAttachmentRegistry
 			Passthrough.instance.onRemoveFramebufferAttachment(data);
 		}
 	}
-	
+
 	public static FramebufferAttachment[] getAttachments()
 	{
 		FramebufferAttachment[] data = new FramebufferAttachment[numAttachments];

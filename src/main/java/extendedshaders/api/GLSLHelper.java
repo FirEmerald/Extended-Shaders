@@ -51,7 +51,7 @@ public class GLSLHelper
 		FBCOMPAT = FB_SUPPORTED ? caps.OpenGL30 ? 0 : caps.GL_ARB_framebuffer_object ? 1 : 2 : -1;
 		SUPPORTED = SHADER_SUPPORTED && FB_SUPPORTED && FB_BLIT_SUPPORTED && TEX_FLOAT_SUPPORTED;
 	}
-	
+
 	/** creates a new shader program **/
 	public static int createProgram()
 	{

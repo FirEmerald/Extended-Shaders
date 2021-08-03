@@ -2,20 +2,29 @@ package extendedshaders.core;
 
 import java.util.Iterator;
 
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 public class TransformerVivecraft extends TransformerOptifine
 {
 	public static final String matrixMode = Shaders.DEOB ? "matrixMode" : "func_179128_n";
-	
+
 	@Override
 	public byte[] transform(String name, String tName, byte[] basicClass)
 	{
 		//if (tName.equals("net.minecraftforge.client.ForgeHooksClient")) basicClass = transformForgeHooksClient(basicClass);
 		return super.transform(name, tName, basicClass);
 	}
-	
+
 	@Override
 	public byte[] transformEntityRenderer(byte[] bytes)
 	{
@@ -24,7 +33,6 @@ public class TransformerVivecraft extends TransformerOptifine
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -32,10 +40,6 @@ public class TransformerVivecraft extends TransformerOptifine
 			{
 				Plugin.logger().debug("Patching renderWorld");
 				InsnList toInject;
-				LabelNode asmchangestart = null;
-				AbstractInsnNode skyStart = null;
-				VarInsnNode ths = null;
-				boolean finished = false;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
 				{

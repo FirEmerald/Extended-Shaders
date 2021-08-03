@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+
 import extendedshaders.api.GLSLHelper;
 import extendedshaders.api.ShaderRegistry;
 import net.minecraft.client.renderer.GlStateManager;
@@ -96,7 +97,7 @@ public class Bypass
 			GL_OPERAND2_ALPHA.put(i, GL11.GL_SRC_ALPHA);
 		}
 	}
-	
+
 	public static void reset()
 	{
 		isAlias = false;
@@ -167,7 +168,7 @@ public class Bypass
 		GLSLHelper.uniform1(Main.GL_OPERAND2_ALPHA, GL_OPERAND2_ALPHA);
 		GLSLHelper.uniform1i(Main.disableEffects, 0);
 	}
-	
+
 	public static void set()
 	{
 		for (int i = 0; i < 8; i++) useTex.put(i, GlStateManager.textureState[i].texture2DState.currentState ? 1 : 0);
@@ -211,17 +212,17 @@ public class Bypass
 		GLSLHelper.uniform1(Main.GL_OPERAND2_ALPHA, GL_OPERAND2_ALPHA);
 		GLSLHelper.uniform1i(Main.disableEffects, disableEffects ? 1 : 0);
 	}
-	
+
 	public static int getTexSpace()
 	{
 		return GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE) - GL13.GL_TEXTURE0;
 	}
-	
+
 	public static boolean isTexture(int param)
 	{
 		return param == GL11.GL_TEXTURE || (param >= GL13.GL_TEXTURE0 && param <= GL13.GL_TEXTURE7);
 	}
-	
+
 	public static void glEnable(int cap)
 	{
 		if (cap == GL11.GL_TEXTURE_2D)
@@ -274,7 +275,7 @@ public class Bypass
 		}
 		GL11.glEnable(cap);
 	}
-	
+
 	public static void glDisable(int cap)
 	{
 		if (cap == GL11.GL_TEXTURE_2D)
@@ -327,7 +328,7 @@ public class Bypass
 		}
 		GL11.glDisable(cap);
 	}
-	
+
 	public static void bindTexture(TextureManager manager, ResourceLocation tex)
 	{
 		if (tex.equals(TextureMap.LOCATION_BLOCKS_TEXTURE))
@@ -358,13 +359,13 @@ public class Bypass
 			}
 		}
 	}
-	
+
 	public static void glFogi(int pname, int param)
 	{
 		GL11.glFogi(pname, param);
 		if (ShaderRegistry.shadersActive && pname == GL11.GL_FOG_MODE) GLSLHelper.uniform1i(Main.fogMode, param);
 	}
-	
+
 	public static void glFogf(int pname, float param)
 	{
 		GL11.glFogf(pname, param);
@@ -385,7 +386,7 @@ public class Bypass
 			}
 		}
 	}
-	
+
 	public static void glFog(int pname, FloatBuffer param)
 	{
 		GL11.glFog(pname, param);
@@ -398,18 +399,18 @@ public class Bypass
 			if (ShaderRegistry.shadersActive) GLSLHelper.uniform4f(Main.fogColor, fogColor[0], fogColor[1], fogColor[2], fogColor[3]);
 		}
 	}
-	
+
 	public static void glColorMask(boolean r, boolean g, boolean b, boolean a) //TODO
 	{
 		if (!(ShaderRegistry.shadersActive && (r ^ (g && b)))) GL11.glColorMask(r, g, b, a);
 		else GL11.glColorMask(true, true, true, a);
 	}
-	
+
 	public static void glTexEnv(int target, int pname, IntBuffer params)
 	{
 		GL11.glTexEnv(target, pname, params);
 	}
-	
+
 	public static void glTexEnv(int target, int pname, FloatBuffer params)
 	{
 		GL11.glTexEnv(target, pname, params);
@@ -429,7 +430,7 @@ public class Bypass
 			}
 		}
 	}
-	
+
 	public static void glTexEnvi(int target, int pname, int param)
 	{
 		GL11.glTexEnvi(target, pname, param);
@@ -535,7 +536,7 @@ public class Bypass
 			}
 		}
 	}
-	
+
 	public static void glTexEnvf(int target, int pname, float param)
 	{
 		GL11.glTexEnvf(target, pname, param);
@@ -562,7 +563,7 @@ public class Bypass
 			}
 		}
 	}
-	
+
 	public static void setIsEntity(boolean flag)
 	{
 		if (isEntity ^ flag)
@@ -571,7 +572,7 @@ public class Bypass
 			if (ShaderRegistry.shadersActive) GLSLHelper.uniform1i(Main.isEntity, flag ? 1 : 0);
 		}
 	}
-	
+
 	public static void setDisableEffects(boolean flag)
 	{
 		if (disableEffects ^ flag)

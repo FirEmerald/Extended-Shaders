@@ -2,13 +2,25 @@ package extendedshaders.core;
 
 import java.util.Iterator;
 
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 public class TransformerOptifine extends Transformer
 {
 	public static final String NAME = "Extended Shaders";
-	
+
 	@Override
 	public byte[] transform(String name, String tName, byte[] basicClass)
 	{
@@ -24,7 +36,6 @@ public class TransformerOptifine extends Transformer
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -32,10 +43,6 @@ public class TransformerOptifine extends Transformer
 			{
 				Plugin.logger().debug("Patching listOfShaders");
 				InsnList toInject;
-				LabelNode asmchangestart = null;
-				AbstractInsnNode skyStart = null;
-				VarInsnNode ths = null;
-				boolean finished = false;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
 				{
@@ -64,7 +71,7 @@ public class TransformerOptifine extends Transformer
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformEnabled(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching extendedshaders.core.Enabled");
@@ -72,7 +79,6 @@ public class TransformerOptifine extends Transformer
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -101,7 +107,7 @@ public class TransformerOptifine extends Transformer
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	@Override
 	public byte[] transformEntityRenderer(byte[] bytes)
 	{
@@ -110,7 +116,6 @@ public class TransformerOptifine extends Transformer
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -118,10 +123,6 @@ public class TransformerOptifine extends Transformer
 			{
 				Plugin.logger().debug("Patching renderWorld");
 				InsnList toInject;
-				LabelNode asmchangestart = null;
-				AbstractInsnNode skyStart = null;
-				VarInsnNode ths = null;
-				boolean finished = false;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
 				{

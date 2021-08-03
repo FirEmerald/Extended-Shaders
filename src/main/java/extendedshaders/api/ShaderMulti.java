@@ -29,7 +29,7 @@ public class ShaderMulti extends Shader
 		this.states = states;
 		this.onReload(Minecraft.getMinecraft().getResourceManager());
 	}
-	
+
 	@Override
 	public void onReload(IResourceManager manager)
 	{

@@ -6,7 +6,7 @@ import java.util.Arrays;
 /** used to turn post-processing effects on and off, by adding and removing them from a registry **/
 public class PostProcessorRegistry
 {
-	private static final ArrayList<PostProcessor> postProcessors = new ArrayList<PostProcessor>();
+	private static final ArrayList<PostProcessor> postProcessors = new ArrayList<>();
 	/** turns the post-processor ON **/
 	public static void addPostProcessor(PostProcessor data)
 	{

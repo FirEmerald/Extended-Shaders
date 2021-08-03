@@ -1,15 +1,25 @@
 package extendedshaders.core;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
-import org.objectweb.asm.*;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 import net.minecraft.launchwrapper.IClassTransformer;
 
@@ -42,7 +52,7 @@ public class Transformer implements IClassTransformer, Opcodes
 	public static final String glTexParameteri = 			Shaders.DEOB ? "glTexParameteri" : 			"func_187421_b";
 	public static final String bindTexture2 = 				Shaders.DEOB ? "bindTexture" : 				"func_110577_a";
 	public static final String renderItemInFirstPerson = 	Shaders.DEOB ? "renderItemInFirstPerson" : 	"renderItemInFirstPerson";
-	
+
 	@Override
 	public byte[] transform(String name, String tName, byte[] basicClass)
 	{
@@ -62,7 +72,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		//saveClass(tName, basicClass);
 		return basicClass;
 	}
-	
+
 	/** /
 	public void saveClass(String name, byte[] basicClass)
 	{
@@ -81,7 +91,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		}
 	}
 	/**/
-	
+
 	public byte[] transformEntityRenderer(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching deobfuscated net.minecraft.client.render.EntityRenderer");
@@ -89,7 +99,6 @@ public class Transformer implements IClassTransformer, Opcodes
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -97,10 +106,6 @@ public class Transformer implements IClassTransformer, Opcodes
 			{
 				Plugin.logger().debug("Patching renderWorld");
 				InsnList toInject;
-				LabelNode asmchangestart = null;
-				AbstractInsnNode skyStart = null;
-				VarInsnNode ths = null;
-				boolean finished = false;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
 				{
@@ -184,7 +189,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformRenderGlobal(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching net.minecraft.client.render.RenderGlobal");
@@ -192,7 +197,6 @@ public class Transformer implements IClassTransformer, Opcodes
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -247,7 +251,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformGameSettings(byte[] basicClass)
 	{
 		Plugin.logger().debug("Patching net.minecraft.client.settings.GameSettings");
@@ -385,10 +389,10 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "deleteFbTex", "(I)I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
-							
+
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferDelete", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
-							
+
 							m.instructions.insert(mNode, toInject);
 							break;
 						}
@@ -412,10 +416,10 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/texture/TextureUtil", glGenTextures, "()I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
-							
+
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateGenTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
-							
+
 							i += toInject.size();
 							size += toInject.size();
 							m.instructions.insert(fNode, toInject);
@@ -431,7 +435,7 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", bindTexture, "(I)V", false));
-							
+
 							toInject.add(new LabelNode()); //GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA32F, this.framebufferTextureWidth, this.framebufferTextureHeight, 0, GL11.GL_RGBA, GL11.GL_FLOAT, null)
 							toInject.add(new LdcInsnNode(new Integer(GL11.GL_TEXTURE_2D)));
 							toInject.add(new InsnNode(ICONST_0));
@@ -492,10 +496,10 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/texture/TextureUtil", glGenTextures, "()I", false));
 							toInject.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
-							
+
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferCreateGenTextures", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
-							
+
 							i += toInject.size();
 							size += toInject.size();
 							m.instructions.insert(fNode, toInject);
@@ -511,7 +515,7 @@ public class Transformer implements IClassTransformer, Opcodes
 							toInject.add(new VarInsnNode(ALOAD, 0));
 							toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
 							toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", bindTexture, "(I)V", false));
-							
+
 							toInject.add(new LabelNode()); //GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA32F, this.framebufferTextureWidth, this.framebufferTextureHeight, 0, GL11.GL_RGBA, GL30.GL_FLOAT, null)
 							toInject.add(new LdcInsnNode(new Integer(GL11.GL_TEXTURE_2D)));
 							toInject.add(new InsnNode(ICONST_0));
@@ -571,7 +575,7 @@ public class Transformer implements IClassTransformer, Opcodes
 							if (j == 2)
 							{
 								InsnList toInject = new InsnList();
-								
+
 								toInject.add(new LabelNode()); //GL11.bindTexture(GL11.GL_TEXTURE_2D, this.framebufferTexturePos)
 								toInject.add(new VarInsnNode(ALOAD, 0));
 								toInject.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/shader/Framebuffer", "framebufferTexturePos", "I"));
@@ -596,10 +600,10 @@ public class Transformer implements IClassTransformer, Opcodes
 								toInject.add(new LdcInsnNode(new Integer(GL11.GL_TEXTURE_WRAP_T)));
 								toInject.add(new LdcInsnNode(new Integer(GL11.GL_CLAMP)));
 								toInject.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/renderer/GlStateManager", glTexParameteri, "(III)V", false));
-								
+
 								toInject.add(new VarInsnNode(ALOAD, 0));
 								toInject.add(new MethodInsnNode(INVOKESTATIC, "extendedshaders/core/Main", "onFramebufferSetFilter", "(Lnet/minecraft/client/shader/Framebuffer;)V", false));
-								
+
 								m.instructions.insert(mNode, toInject);
 								break;
 							}
@@ -613,7 +617,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformItemRenderer(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching net.minecraft.client.render.ItemRenderer");
@@ -621,7 +625,6 @@ public class Transformer implements IClassTransformer, Opcodes
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -629,10 +632,6 @@ public class Transformer implements IClassTransformer, Opcodes
 			{
 				Plugin.logger().debug("Patching renderItemInFirstPerson");
 				InsnList toInject;
-				LabelNode asmchangestart = null;
-				AbstractInsnNode skyStart = null;
-				VarInsnNode ths = null;
-				boolean finished = false;
 				int size = m.instructions.size();
 				for (int i = 0; i < size; i++)
 				{
@@ -654,7 +653,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] transformFramebufferUtil(byte[] bytes)
 	{
 		Plugin.logger().debug("Patching extendedshaders.core.FramebufferUtil");
@@ -662,7 +661,6 @@ public class Transformer implements IClassTransformer, Opcodes
 		ClassReader classReader = new ClassReader(bytes);
 		classReader.accept(classNode, 0);
 		Iterator<MethodNode> methods = classNode.methods.iterator();
-		boolean canSkipSky = true;
 		while(methods.hasNext())
 		{
 			MethodNode m = methods.next();
@@ -690,7 +688,7 @@ public class Transformer implements IClassTransformer, Opcodes
 		Plugin.logger().debug("Patching successful");
 		return writer.toByteArray();
 	}
-	
+
 	public byte[] bypass(String name, byte[] bytes)
 	{
 		int bypasses = 0;
@@ -710,12 +708,12 @@ public class Transformer implements IClassTransformer, Opcodes
 					{
 						MethodInsnNode mNode = (MethodInsnNode) node;
 						if (mNode.owner.equals("org/lwjgl/opengl/GL11") && (
-								mNode.name.equals("glEnable") || 
-								mNode.name.equals("glDisable") || 
-								mNode.name.equals("glTexGeni") || 
-								mNode.name.equals("glFogi") || 
-								mNode.name.equals("glFogf") || 
-								mNode.name.equals("glFog") || 
+								mNode.name.equals("glEnable") ||
+								mNode.name.equals("glDisable") ||
+								mNode.name.equals("glTexGeni") ||
+								mNode.name.equals("glFogi") ||
+								mNode.name.equals("glFogf") ||
+								mNode.name.equals("glFog") ||
 								mNode.name.equals("glColorMask") ||
 								mNode.name.equals("glTexEnv") ||
 								mNode.name.equals("glTexEnvi") ||

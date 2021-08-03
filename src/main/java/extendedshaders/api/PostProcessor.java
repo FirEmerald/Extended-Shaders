@@ -97,7 +97,7 @@ public class PostProcessor implements Comparable<PostProcessor>
 		if (shaderText.equals("") && uniformText.equals("")) program = 0;
 		else Passthrough.instance.loadPostProcessor(this);
 	}
-	
+
 	/** get the custom uniform locations from this program here. requires use of a superclass, of course.**/
 	public void getUniforms(int program) {}
 
@@ -107,13 +107,13 @@ public class PostProcessor implements Comparable<PostProcessor>
 	{
 		return o.priority - priority;
 	}
-	
+
 	/** called after the post processor is bound - use this to set uniforms if needed.*/
 	public void onBind(float partialTicks) {}
-	
+
 	/** called on each iteration of the post processor - use this to set uniforms if needed.*/
 	public void onIteration(int iteration, float partialTicks) {}
-	
+
 	/**
 	 * how many times should this post processor run? useful for screen distortion by entities.
 	 * @return the number of iterations
@@ -122,7 +122,7 @@ public class PostProcessor implements Comparable<PostProcessor>
 	{
 		return 1;
 	}
-	
+
 	/** called for each iteration, so you can set appropriate uniform values **/
 	public void onIteration(int iteration) {}
 }
