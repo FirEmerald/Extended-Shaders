@@ -577,7 +577,7 @@ public class Main
 		BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		img.setRGB(0, 0, w, h, pixelValues, 0, w);
 		File file3 = new File(Minecraft.getMinecraft().mcDataDir, "test" + tex + ".png");
-		if (!ImageIO.write(img, "png", file3)) //TODO ask if want to exclude alpha?
+		if (!ImageIO.write(img, "png", file3))
 		{
 			img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 			img.setRGB(0, 0, w, h, pixelValues, 0, w);

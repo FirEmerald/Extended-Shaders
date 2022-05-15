@@ -22,7 +22,7 @@ import net.minecraftforge.fml.relauncher.Side;
 public class Plugin implements IFMLLoadingPlugin, IFMLCallHook
 {
     public static final String MC_VERSION = "[1.12.2]";
-    public static final String ES_VERSION = "[7.5]";
+    public static final String ES_VERSION = "[7.5.1]";
     private File location;
 
     public final Logger logger = LogManager.getLogger("Extended Shaders");
