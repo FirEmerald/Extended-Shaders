@@ -1,3 +1,5 @@
+#version 130
+
 varying vec4 fragCol; //fragment color
 varying vec3 fragNorm; //fragment normal
 varying vec4 eyePos; //fragment eye position

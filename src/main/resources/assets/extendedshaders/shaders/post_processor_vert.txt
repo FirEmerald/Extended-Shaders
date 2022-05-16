@@ -1,3 +1,5 @@
+#version 130
+
 varying vec2 texCoords;
 
 void main()
