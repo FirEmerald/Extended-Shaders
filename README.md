@@ -1,6 +1,9 @@
-Extended Shaders mod for Minecraft 1.12.2.	
-The purpose of this API, and it's containing coremod, Extended Shaders, is to allow mods to use shaders and post-processors inside Minecraft without needing to learn how to make a coremod, and without sacrificing compatibility with other mods using this shader system.	
-It is designed to allow multiple mods to "attach" shader uniforms, variables, constants, and code without conflicting with each other, in a way not provided by GLSL itself.	
+[![Discord](https://img.shields.io/discord/176190900945289237?style=flat-square&logo=discord&logoColor=ffffff&label=Discord)](https://discord.gg/ykHRhmC)  
+[![Curseforge](https://cf.way2muchnoise.eu/short_252387_downloads.svg?badge_style=flat)](https://www.curseforge.com/minecraft/mc-mods/extended-shaders)  
+
+Extended Shaders mod for Minecraft 1.12.2.  
+The purpose of this API, and it's containing coremod, Extended Shaders, is to allow mods to use shaders and post-processors inside Minecraft without needing to learn how to make a coremod, and without sacrificing compatibility with other mods using this shader system.  
+It is designed to allow multiple mods to "attach" shader uniforms, variables, constants, and code without conflicting with each other, in a way not provided by GLSL itself.  
 It is NOT intended to be used by someone without a good understanding of GLSL.  
   
 HOW TO USE:  
